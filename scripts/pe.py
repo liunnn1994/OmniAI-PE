@@ -174,10 +174,46 @@ def check_wim(path, slot):
 def replacement_wim(inputs, slot):
     replacement = slot["replacement"]
     source = safe_path(inputs, replacement["source"])
-    require(source.is_file() and sha256(source) == replacement["sha256"],
+    if source.is_file() and sha256(source) == replacement["sha256"]:
+        check_wim(source, slot)
+        return source
+    if recipe := replacement.get("recipe"):
+        cache = kernel_cache(recipe)
+        source = safe_path(cache, Path(replacement["source"]).name)
+        stamp = safe_path(cache, "sha256")
+        require(source.is_file() and stamp.is_file(),
+                "请先运行 mise run init 制备微软 WinPE 底座")
+        expected = stamp.read_text(encoding="ascii").strip()
+        check_hash(expected)
+    else:
+        expected = replacement["sha256"]
+    require(source.is_file() and sha256(source) == expected,
             f"Replacement WIM missing or SHA-256 mismatch: {source}")
     check_wim(source, slot)
     return source
+
+
+def kernel_cache(recipe):
+    require("/" not in relative(recipe) and recipe.endswith(".json"), "底座配方必须是 JSON 文件名")
+    config = safe_path(ROOT, f"manifests/{recipe}")
+    return safe_path(ROOT, f".work/kernel/{sha256(config)}")
+
+
+def check_fixed_media(media, project, lock):
+    generated = {slot["path"] for slot in project["wims"].values()}
+    expected = {name: record for name, record in lock["media"].items() if name not in generated}
+    actual = {name for name, path in tree(media) if path.is_file()}
+    require(actual == expected.keys(), f"固定媒体文件清单与上游锁不一致：{media}")
+    for name, record in expected.items():
+        check_file(safe_path(media, name), record)
+
+
+def fixed_media(inputs, project, lock):
+    media = safe_path(inputs, project["media_source"])
+    check_fixed_media(media, project, lock)
+    for kind, record in lock["boot"].items():
+        check_file(safe_path(inputs, f"boot/{kind}.bin"), record)
+    return media
 
 
 def verify_wim_kernel(wim, slot, expected, destination):
@@ -194,7 +230,7 @@ def verify_wim_kernel(wim, slot, expected, destination):
     print(f"Verified boot image kernel {actual} in {wim}", flush=True)
 
 
-def load_plan(inputs, with_inputs, manifest="project.json"):
+def load_plan(inputs, with_inputs, manifest="project.json", *, with_kernel=True):
     require("/" not in relative(manifest) and manifest.endswith(".json"), "Expected a manifest filename")
     project = read_json(manifest)
     lock = read_json("upstream.lock.json")
@@ -203,6 +239,10 @@ def load_plan(inputs, with_inputs, manifest="project.json"):
     layouts = {name: {key: value for key, value in slot.items() if key != "replacement"}
                for name, slot in project["wims"].items()}
     require(layouts == lock["wims"], "WIM paths, image counts and boot indexes must match the lock")
+    if "media_source" in project:
+        relative(project["media_source"])
+        require(all("replacement" in slot for slot in project["wims"].values()),
+                "固定媒体目录需要为每个 WIM 提供替换映像")
     scopes = {"media": {"root": "media", "protected": ["Boot", "EFI", "bootmgr", "bootmgr.efi"]}}
     for name, slot in project["wims"].items():
         relative(name)
@@ -211,12 +251,18 @@ def load_plan(inputs, with_inputs, manifest="project.json"):
             require(relative(replacement["source"]).lower().endswith(".wim"),
                     f"Expected a complete replacement WIM: {name}")
             check_hash(replacement["sha256"])
+            if recipe_name := replacement.get("recipe"):
+                kernel_cache(recipe_name)
+                recipe = read_json(recipe_name)
+                require(recipe["output"] == Path(replacement["source"]).name
+                        and recipe["kernel_version"] == replacement.get("kernel_version"),
+                        f"底座配方与项目配置不匹配：{recipe_name}")
             if "kernel_version" in replacement:
                 version = replacement["kernel_version"]
                 require(isinstance(version, str) and KERNEL_VERSION.fullmatch(version)
                         and 1 <= slot["boot_index"] <= slot["image_count"],
                         f"Invalid expected boot kernel version: {name}")
-            if with_inputs:
+            if with_inputs and (with_kernel or "media_source" not in project):
                 replacement_wim(inputs, slot)
         scopes["media"]["protected"].append(relative(slot["path"]))
         for index in range(1, slot["image_count"] + 1):
@@ -349,9 +395,12 @@ def load_plan(inputs, with_inputs, manifest="project.json"):
             require(not any(overlaps(target, name) for name in plan["overlay"]),
                     f"Removal overlaps a changed configuration: {scope}/{target}")
     if with_inputs:
-        iso = safe_path(inputs, lock["iso"]["file"])
-        check_file(iso, lock["iso"])
-        boot_images(iso, lock["boot"])
+        if "media_source" in project:
+            fixed_media(inputs, project, lock)
+        else:
+            iso = safe_path(inputs, lock["iso"]["file"])
+            check_file(iso, lock["iso"])
+            boot_images(iso, lock["boot"])
     return project, lock, scopes
 
 
@@ -737,7 +786,7 @@ def service_wim(stage, path, index, plan, inputs):
     remove_empty_temp()
 
 
-def prepare_base(inputs, recipe):
+def prepare_base(inputs, recipe, *, output_dir=None, stage=None):
     version = recipe["kernel_version"]
     require(isinstance(version, str) and KERNEL_VERSION.fullmatch(version), "Invalid target kernel version")
     layout = {"image_count": 1, "boot_index": 1}
@@ -755,10 +804,11 @@ def prepare_base(inputs, recipe):
         require(sha256(path) == package["sha256"], f"Windows package hash mismatch: {path}")
     output_name = recipe.get("output", f"Microsoft-WinPE-{version.removeprefix('10.0.')}-amd64.wim")
     require("/" not in relative(output_name) and output_name.lower().endswith(".wim"), "Expected a WIM output filename")
-    output = safe_path(inputs, f"wims/{output_name}")
+    output = safe_path(inputs / "wims" if output_dir is None else output_dir, output_name)
     require(not output.exists(), f"Base already exists: {output}")
     stage_name = output.stem if "output" in recipe else version
-    stage = safe_path(ROOT, f".work/base/{stage_name}")
+    if stage is None:
+        stage = safe_path(ROOT, f".work/base/{stage_name}")
     stage.parent.mkdir(parents=True, exist_ok=True)
     prepare_service_directory(stage, True)
     wim = stage / output.name
@@ -784,29 +834,38 @@ def prepare_base(inputs, recipe):
     require(sha256(pending) == digest, f"Copied base hash mismatch: {pending}")
     pending.rename(output)
     print(f"{digest}  {output}")
+    return digest
 
 
 def stage_media(project, lock, scopes, inputs):
     stage = safe_path(ROOT, f".work/stage/{project['version']}")
     stage.mkdir(parents=True)
     media = stage / "media"
-    source = safe_path(inputs, lock["iso"]["file"])
-    for kind, data in boot_images(source, lock["boot"]).items():
-        (stage / f"{kind}.bin").write_bytes(data)
-    run(tool("SEVENZIP", "7z.exe"), "x", "-y", f"-o{media}", source)
-    actual = {name for name, path in tree(media) if path.is_file()}
-    require(actual == lock["media"].keys(), "Extracted media file list differs from the upstream lock")
-    for path, record in lock["media"].items():
-        check_file(safe_path(media, path), record)
+    if "media_source" in project:
+        shutil.copytree(fixed_media(inputs, project, lock), media)
+        check_fixed_media(media, project, lock)
+        for kind, record in lock["boot"].items():
+            target = stage / f"{kind}.bin"
+            shutil.copyfile(safe_path(inputs, f"boot/{kind}.bin"), target)
+            check_file(target, record)
+    else:
+        source = safe_path(inputs, lock["iso"]["file"])
+        for kind, data in boot_images(source, lock["boot"]).items():
+            (stage / f"{kind}.bin").write_bytes(data)
+        run(tool("SEVENZIP", "7z.exe"), "x", "-y", f"-o{media}", source)
+        actual = {name for name, path in tree(media) if path.is_file()}
+        require(actual == lock["media"].keys(), "Extracted media file list differs from the upstream lock")
+        for path, record in lock["media"].items():
+            check_file(safe_path(media, path), record)
     apply_plan(media, scopes["media"], inputs)
     for slug, slot in project["wims"].items():
         wim = safe_path(media, slot["path"])
-        check_wim(wim, slot)
         if "replacement" in slot:
             source = replacement_wim(inputs, slot)
             shutil.copyfile(source, wim)
-            require(sha256(wim) == slot["replacement"]["sha256"],
+            require(sha256(wim) == sha256(source),
                     f"Copied replacement WIM hash mismatch: {wim}")
+        check_wim(wim, slot)
         plans = [scopes[f"{slug}/{index}"] for index in range(1, slot["image_count"] + 1)]
         service = stage / f"service-{slug}"
         for index, plan in enumerate(plans, 1):
@@ -839,10 +898,13 @@ def build_iso(project, lock, stage, dist):
 
 
 def bundle_inputs(inputs, project, lock, scopes, destination):
-    sources = {lock["iso"]["file"]}
-    for slot in project["wims"].values():
-        if "replacement" in slot:
-            sources.add(slot["replacement"]["source"])
+    if media := project.get("media_source"):
+        sources = {media, *(f"boot/{kind}.bin" for kind in lock["boot"])}
+    else:
+        sources = {lock["iso"]["file"]}
+        for slot in project["wims"].values():
+            if "replacement" in slot:
+                sources.add(slot["replacement"]["source"])
     for plan in scopes.values():
         packages = [*plan["packages"].values(), *plan["windows_packages"], *plan["registry"].values()]
         packages.extend(plan[kind] for kind in ("windows_files", "windows_drivers") if plan[kind])
@@ -868,28 +930,42 @@ def bundle_inputs(inputs, project, lock, scopes, destination):
 
 class HttpsRedirectHandler(HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
-        require(newurl.startswith("https://"), "Input download requires HTTPS redirects")
+        require(newurl.startswith("https://"), "构建输入下载只允许重定向到 HTTPS 地址")
         return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def download_https(url, destination, label):
+    require(url.startswith("https://"), f"{label}必须使用 HTTPS")
+    try:
+        opener = build_opener(HttpsRedirectHandler())
+        with opener.open(url, timeout=120) as response, destination.open("xb") as archive:
+            shutil.copyfileobj(response, archive)
+    except (HTTPException, OSError, ValueError):
+        raise ValueError(f"{label}下载失败") from None
 
 
 def fetch_inputs(inputs, manifest, archive_path):
     safe_path(inputs.parent, inputs.name)
-    require(not inputs.exists(), f"Input directory already exists: {inputs}")
-    url = os.environ.get("OMNIAI_INPUTS_URL", "")
-    require(archive_path or url.startswith("https://"),
-            "Set OMNIAI_INPUTS_URL to a private HTTPS ZIP URL or supply --archive")
+    require(not inputs.exists(), f"构建输入目录已存在：{inputs}")
+    url = os.environ.get("OMNIAI_INPUTS_URL", "").strip()
+    if archive_path is None and not url:
+        local_archive = os.environ.get("OMNIAI_INPUTS_ARCHIVE", "").strip()
+        if local_archive:
+            archive_path = Path(local_archive).expanduser()
+    if archive_path is not None:
+        require(archive_path.is_file(), f"找不到构建输入 ZIP：{archive_path}")
+    elif url:
+        require(url.startswith("https://"), "OMNIAI_INPUTS_URL 必须是私有 ZIP 的 HTTPS 下载地址")
+    else:
+        raise ValueError("缺少完整的私有构建输入 ZIP。请设置 OMNIAI_INPUTS_URL 或 OMNIAI_INPUTS_ARCHIVE，"
+                         "也可运行 mise run fetch-inputs -- --archive <ZIP 路径>")
 
     inputs.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".omniai-inputs-", dir=inputs.parent) as directory:
         work = Path(directory)
         if archive_path is None:
             archive_path = work / "inputs.zip"
-            try:
-                opener = build_opener(HttpsRedirectHandler())
-                with opener.open(url, timeout=120) as response, archive_path.open("xb") as archive:
-                    shutil.copyfileobj(response, archive)
-            except (HTTPException, OSError, ValueError):
-                raise ValueError("Private inputs download failed") from None
+            download_https(url, archive_path, "私有构建输入")
 
         unpacked = work / "inputs"
         unpacked.mkdir()
@@ -903,7 +979,7 @@ def fetch_inputs(inputs, manifest, archive_path):
                     with archive.open(entry) as source, path.open("xb") as output:
                         shutil.copyfileobj(source, output)
 
-        load_plan(unpacked, True, manifest)
+        load_plan(unpacked, True, manifest, with_kernel=False)
         unpacked.rename(inputs)
 
 
@@ -922,7 +998,7 @@ def main():
     inputs = Path(os.environ.get("OMNIAI_INPUTS", ROOT / "inputs")).absolute()
     if args.command == "fetch-inputs":
         fetch_inputs(inputs, args.manifest, args.archive)
-        print(f"Verified inputs restored to {inputs}")
+        print(f"构建输入已校验并恢复到 {inputs}")
         return
     if args.command == "hash":
         print(package_hash(safe_path(inputs, args.source)))
@@ -933,7 +1009,8 @@ def main():
         prepare_base(inputs, read_json(args.recipe))
         return
     with_inputs = not getattr(args, "without_inputs", False)
-    project, lock, scopes = load_plan(inputs, with_inputs, args.manifest)
+    project, lock, scopes = load_plan(inputs, with_inputs, args.manifest,
+                                      with_kernel=args.command != "bundle-inputs")
     if args.command == "check":
         print("Checks passed" if with_inputs else "Manifest and overlay checks passed (private inputs skipped)")
         return

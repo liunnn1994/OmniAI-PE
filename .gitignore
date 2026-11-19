@@ -1,5 +1,9 @@
-/inputs/
+/inputs/*.iso
+/inputs/wims/
+/inputs/updates/26100/checkpoint/
+/inputs/updates/26100/rollup/
 /.work/
 /dist/
 /.omniai-inputs-*/
+/.mise.local.toml
 __pycache__/

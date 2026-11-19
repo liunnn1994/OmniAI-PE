@@ -1,6 +1,6 @@
 # OmniAI PE
 
-OmniAI PE 是基于 HotPE V2.8.251018 的 Windows PE 装配工程。仓库维护版本、ISO 布局、软件和运行时清单，以及可以直接编辑的启动配置。原版 ISO、WIM、驱动、HPM 和其它二进制作为私有构建输入使用。Windows 和原版软件保持原发布形态。
+OmniAI PE 是基于 HotPE V2.8.251018 的 Windows PE 装配工程。仓库维护构建配置、启动脚本和已解包的固定资源。固定资源由 Git LFS 管理，微软 WinPE 底座由初始化任务从微软源制备。
 
 当前默认构建去掉 HotPE 的启动展示窗口、壁纸、主题切换、开始菜单与任务栏透明效果，以及光盘自定义图标。保留开始菜单和任务栏的功能入口、工具快捷方式、HPM 与 Edgeless 加载配置和驱动配置。
 
@@ -8,7 +8,7 @@ OmniAI PE 是基于 HotPE V2.8.251018 的 Windows PE 装配工程。仓库维护
 
 | 内容 | ISO 内位置 | 工程内入口 |
 | --- | --- | --- |
-| BIOS 和 UEFI | El Torito 目录、`Boot/`、`EFI/` | 构建时复制原版启动镜像与启动文件 |
+| BIOS 和 UEFI | El Torito 目录、`Boot/`、`EFI/` | `inputs/boot/` 中的启动镜像和 `inputs/media/` 中的启动文件 |
 | 原版 Win11 x64 PE 10.0.26100.5067 | `HotPE/Boot.wim`，映像与启动索引均为 1 | `project.json` 用微软 WinPE 10.0.26100.9974 替换该 WIM |
 | 预装软件 | `HotProgMods/*.HPM` | `packages` 和 `media_remove` |
 | 外置网卡驱动 | `HotPE/Data/Drives/` | `media` 作用域 |
@@ -19,23 +19,25 @@ OmniAI PE 是基于 HotPE V2.8.251018 的 Windows PE 装配工程。仓库维护
 
 ## 本机构建
 
-使用 Windows、[mise](https://mise.jdx.dev/)、[7-Zip](https://www.7-zip.org/) 和 [Windows ADK Deployment Tools](https://learn.microsoft.com/en-us/windows-hardware/get-started/adk-install)。Python 版本固定在 `.mise.toml`。可用 `OMNIAI_INPUTS` 指定输入目录，默认是 `inputs/`。`SEVENZIP` 和 `OSCDIMG` 可指定工具完整路径。装配涉及 WIM 修改时，在管理员 PowerShell 中执行。
-
-将私有构建包的 HTTPS 地址设为 `OMNIAI_INPUTS_URL`。`mise run fetch-inputs` 下载并校验 [项目配置](manifests/project.json) 引用的输入，再写入尚不存在的输入目录。已有私有 ZIP 时，使用 `mise run fetch-inputs -- --archive 'D:\Downloads\OmniAI-PE-inputs-0.3.24.zip'` 恢复。
+使用 Windows、Git LFS、[mise](https://mise.jdx.dev/)、[7-Zip](https://www.7-zip.org/) 和 [Windows ADK Deployment Tools](https://learn.microsoft.com/en-us/windows-hardware/get-started/adk-install)。拉取仓库后，在项目根目录打开管理员 PowerShell。Python 版本固定在 `.mise.toml`。`OMNIAI_INPUTS` 可指定其他输入目录，默认使用 `inputs/`。`SEVENZIP` 和 `OSCDIMG` 可指定工具完整路径。
 
 ```powershell
+git lfs pull
 mise install
-mise run fetch-inputs
+mise run init
 mise run check
 mise run build
 ```
 
 - `mise run check -- --without-inputs` 只检查清单、配置和路径规则。
-- `check` 还校验私有输入以及原版 ISO 的启动镜像。
+- `init` 校验 Git 中的固定资源，按 [底座配方](manifests/base-setup-26100.9974.json) 读取微软安装介质的 `boot.wim` 区段、下载所需 MSU 并制备 WinPE。有本地微软安装介质时，可用 `mise run init -- --windows-iso <路径>` 复用。
+- `check` 还校验固定资源、两份启动镜像和已制备的底座。
 - `stage` 只装配到 `.work/stage/<version>/media/`，可直接查看拆开的媒体。每次装配都会校验解包出的原版文件，再应用清单。
 - `build` 从干净的装配目录生成 ISO 和 SHA-256，输出到 `dist/<version>/`，并校验生成的 ISO 仍包含原版两个启动镜像。
 
 用 `mise tasks ls` 查看所有任务，用 `mise run test` 运行装配脚本的单元测试。
+
+固定资源位于 `inputs/media/`、`inputs/boot/`、`inputs/packages/`、`inputs/registry/` 和 `inputs/updates/26100/optional/`。初始化用的 WIM、MSU 和生成后的底座保存在本机缓存。单独备份固定资源时仍可运行 `mise run bundle-inputs`。
 
 `stage` 和 `build` 都会拒绝覆盖同版本装配目录。重跑时可递增版本，或确认该目录没有活动的 DISM 挂载，同时确认对应的 ISO 没有被测试机使用，再单独处理对应版本的旧目录。DISM 的日志在 `.work/stage/<version>/service-<id>/dism.log`，提交失败时保留对应挂载以供检查。
 
@@ -68,7 +70,7 @@ HotPE 的模块制作、加载行为和授权范围可查阅官方文档。Windo
 
 ## 迁移到新版 WinPE
 
-完整 WIM 放入 `inputs/wims/` 后，可在 `wims.boot.replacement` 指定相对于 `inputs/` 的 `source` 和用 `pe.py hash` 得到的 `sha256`。装配先验原版媒体，再替换完整 WIM，校验文件哈希、映像数量和启动索引，最后应用该槽位的包和配置。配置 `kernel_version` 后，装配会在提交 WIM 后读取启动索引的 `ntoskrnl.exe`，版本不匹配时停止打包。迁移时需要更新该槽位的覆盖与删除清单，使其对应新版映像中的实际文件。
+更新默认底座时，修改 `wims.boot.replacement.recipe` 指向的配方，并同步调整该槽位的版本与覆盖清单。初始化和最终装配都会检查目标内核版本。也可把经过校验的完整 WIM 放入 `inputs/wims/`，在项目配置中指定 `source` 和 `sha256`。
 
 可把候选配置放在 `manifests/`，用 `mise run pe -- --manifest candidate.json check` 和 `mise run pe -- --manifest candidate.json build` 验证并构建。替换项的 `windows_packages` 按映像索引列出 CAB/MSU 的 `source` 和 `sha256`，数组顺序就是 DISM 安装顺序。替换项的 `configs` 按索引列出要复制的路径，源文件位于 `src/wim/<id>/<index>/.replacement/`。默认构建跳过这个目录。
 
@@ -80,10 +82,4 @@ HotPE 的模块制作、加载行为和授权范围可查阅官方文档。Windo
 
 [流水线](.github/workflows/pe.yml) 在 push 和 PR 时执行源码检查和单元测试。完整构建使用 GitHub 托管的 Windows runner，只在默认分支运行，支持手动触发。设置仓库变量 `OMNIAI_AUTO_BUILD=1` 后，默认分支每次 push 也会执行完整构建。
 
-手动触发和自动构建均使用 `manifests/project.json`，与本地共用 `.mise.toml` 中的任务。
-
-1. 创建 `pe-build` environment 并把部署分支限制为默认分支。
-2. 运行 `mise run bundle-inputs`。命令验证私有输入，并将原版 ISO 和项目配置引用的文件及完整目录打入 `.work/bundles/project-<版本>.zip`。把 ZIP 上传到私有存储，再将 runner 可用的 HTTPS 下载地址设为 environment secret `OMNIAI_INPUTS_URL`。
-3. 公开仓库还需配置 `OMNIAI_OUTPUT_URL`，例如私有对象的签名 PUT URL，接受 `application/octet-stream`。ISO 会写入该对象，SHA-256 出现在运行摘要。私有仓库通过 Actions artifact 提供 ISO 和校验文件。
-
-签名 URL 要在流水线下载和上传时有效。使用固定 PUT 对象键会覆盖该对象，需要保留历史时按版本更换对象键。
+构建任务随仓库检出 Git LFS 资源，运行 `mise run init` 和 `mise run build`。私有仓库通过 Actions artifact 提供 ISO 和校验文件。公开仓库在运行摘要记录 SHA-256，若在 `pe-build` 环境中配置 `OMNIAI_OUTPUT_URL`，流水线还会将 ISO 上传到对应的私有 HTTPS PUT 地址。

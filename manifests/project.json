@@ -1,6 +1,7 @@
 {
-  "version": "0.3.24",
+  "version": "0.3.25",
   "volume_label": "OMNIAI_PE",
+  "media_source": "media",
   "wims": {
     "boot": {
       "path": "HotPE/Boot.wim",
@@ -8,7 +9,8 @@
       "boot_index": 1,
       "replacement": {
         "source": "wims/Microsoft-SetupPE-26100.9974-amd64.wim",
-        "sha256": "c954eba390fef4652c5b50126595de0da62a84303d4b132e925e657bd7f7f98a",
+        "recipe": "base-setup-26100.9974.json",
+        "sha256": "b7bf1015b3ec9dca3a8625e50a2d25b3ac29cd53deb26dcac358682e247cf51b",
         "kernel_version": "10.0.26100.9974",
         "configs": {
           "1": [
@@ -144,16 +146,16 @@
             "relocate_setup_paths": true,
             "files": {
               "source": "packages/winpe-26100.9974-compat-0324/files",
-              "sha256": "44c913122dae4e09289cbcfeae0a9f823123c869c9964c10e8ab1d72ac3ed593"
+              "sha256": "f3874cfce08d02f8b4ded954f7ae618dd6229cd6e17f88b1ced7953b4ce81fe0"
             },
             "drivers": {
               "source": "packages/windows-setuppe-26100.9974-driver-delta",
-              "sha256": "e3be9b6134718cfa6e44c3e191f4c415fcd5de96505d162a48f710f17f7ae0af"
+              "sha256": "fcf874dbf469e374fc9cb371509f9c7248038da705a14bb692084bb3806a9e60"
             },
             "registry": {
               "SYSTEM": {
                 "source": "registry/hotpe-2.8/SYSTEM",
-                "sha256": "28614f021624228734b3fecaaf92bbfdd36277e700107c463b51cc78c61f5dba",
+                "sha256": "585a0b2ea60a3e06070732205b102a97e487f272886abb470db023ea0e2690ef",
                 "keys": [
                   "Services/bthenum",
                   "Services/bthserv",
@@ -179,7 +181,7 @@
               },
               "SOFTWARE": {
                 "source": "registry/windows-26100.9974/SOFTWARE",
-                "sha256": "05636507bb60c048ec04ff0b68208c5f9ba8ec9cf5572d8e834961baa68ae167",
+                "sha256": "7de80e406f21f3a72994bf692775729c82c15c20397bcd75c64da7bf189f8d6d",
                 "keys": [
                   "Classes/.msc",
                   "Classes/MSCFile",
@@ -316,7 +318,7 @@
       "scope": "boot/1",
       "source": "packages/windows-26100.9974-driver-catalogs",
       "target": "Program Files/OmniAI Startup/Driver Catalogs",
-      "sha256": "59a326a6a7caa604ff7bf38914f9d0037afef9fec029bfb6eb37c4d9e0e4712f"
+      "sha256": "1318bac65d171ce514d3cc24178ec1a3517238f716e84d74028b45f882994eec"
     },
     {
       "scope": "boot/1",
@@ -352,7 +354,7 @@
       "scope": "boot/1",
       "source": "packages/hotpe-2.8-no-theme/Program Files/HPM",
       "target": "Program Files/HPM",
-      "sha256": "fdbd849f90f3ad0e5113bb9f50214b550662110b58f4f6fc7594f468c8473ba3"
+      "sha256": "504c18023244390027218eb26a5143e2c2e0465c6c65b901f37790b11f38a425"
     },
     {
       "scope": "boot/1",

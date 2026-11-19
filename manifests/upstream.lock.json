@@ -1,6 +1,7 @@
 {
   "iso": {
     "file": "HotPE-V2.8.251018.iso",
+    "url": "https://github.com/VirtualHotBar/HotPEToolBox/releases/download/251018/HotPE-V2.8.251018.iso",
     "size": 1109088256,
     "sha256": "2d8de0efde0017d60374da9310125d76085d87aad5a2300701949afb18a73ad4"
   },

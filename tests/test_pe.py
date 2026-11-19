@@ -1,14 +1,42 @@
 import copy
+from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 from zipfile import ZipFile
 
-from scripts import pe, prepare_compat
+from scripts import pe, prepare_compat, prepare_upstream
 
 
 class BundleTest(unittest.TestCase):
+    def test_range_download_resumes_at_first_missing_byte(self):
+        with TemporaryDirectory() as directory:
+            output = Path(directory) / "kernel.wim"
+            first = BytesIO(b"ab")
+            first.status, first.headers = 206, {"Content-Range": "bytes 10-13/100"}
+            second = BytesIO(b"cd")
+            second.status, second.headers = 206, {"Content-Range": "bytes 12-13/100"}
+            with patch.object(prepare_upstream, "build_opener") as opener:
+                request = opener.return_value.open
+                request.side_effect = [first, second]
+                prepare_upstream.download_range("https://example.test/iso", output, 10, 4)
+            self.assertEqual(output.read_bytes(), b"abcd")
+            self.assertEqual([call.args[0].get_header("Range") for call in request.call_args_list],
+                             ["bytes=10-13", "bytes=12-13"])
+
+    def test_publish_rejects_unverified_upstream_payload(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source.cab"
+            source.write_bytes(b"unverified")
+            destination = root / "inputs" / "update.cab"
+            record = {"source": "update.cab", "sha256": "0" * 64}
+            with self.assertRaisesRegex(ValueError, "SHA-256"):
+                prepare_upstream.publish(source, destination,
+                                         lambda path: prepare_upstream.verify_payload(path, record))
+            self.assertFalse(destination.exists())
+
     def test_bundle_preserves_referenced_inputs_and_empty_directories(self):
         with TemporaryDirectory() as directory:
             root = Path(directory)
@@ -38,12 +66,18 @@ class BundleTest(unittest.TestCase):
                 pe.bundle_inputs(inputs, project, lock, scopes, bundle)
             with ZipFile(bundle) as archive:
                 self.assertEqual({name for name in archive.namelist() if not name.endswith("/")}, files)
-            with patch.object(pe, "load_plan") as validate:
-                pe.fetch_inputs(root / "extracted", "project.json", bundle)
+            with (patch.dict("os.environ", {"OMNIAI_INPUTS_ARCHIVE": str(bundle)}, clear=True),
+                  patch.object(pe, "load_plan") as validate):
+                pe.fetch_inputs(root / "extracted", "project.json", None)
                 validate.assert_called_once()
             self.assertTrue((root / "extracted/packages/tool/empty").is_dir())
             for folder in ("packages/tool", "files", "drivers"):
                 self.assertEqual(pe.package_hash(inputs / folder), pe.package_hash(root / "extracted" / folder))
+
+    def test_fetch_requires_an_input_source(self):
+        with patch.dict("os.environ", {}, clear=True):
+            with self.assertRaisesRegex(ValueError, "缺少完整的私有构建输入 ZIP"):
+                pe.fetch_inputs(Path("未创建的构建输入目录"), "project.json", None)
 
     def test_fetch_rejects_archive_traversal_before_publishing_inputs(self):
         with TemporaryDirectory() as directory:
@@ -106,6 +140,7 @@ class PathsTest(unittest.TestCase):
     def test_manifest_rejects_overlapping_and_reserved_targets(self):
         baseline = pe.read_json("project.json")
         lock = pe.read_json("upstream.lock.json")
+        recipe = pe.read_json(baseline["wims"]["boot"]["replacement"]["recipe"])
         cases = [
             ("media_remove", ["HotProgMods", "hotprogmods/a.hpm"], "Overlapping"),
             ("media_remove", ["HotPE"], "Reserved"),
@@ -116,7 +151,7 @@ class PathsTest(unittest.TestCase):
             with self.subTest(value=value):
                 project = copy.deepcopy(baseline)
                 project[field] = value
-                with patch.object(pe, "read_json", side_effect=[project, lock]):
+                with patch.object(pe, "read_json", side_effect=[project, lock, recipe]):
                     with self.assertRaisesRegex(ValueError, message):
                         pe.load_plan(Path("inputs"), False)
 
@@ -266,6 +301,7 @@ class ImageTest(unittest.TestCase):
         project = pe.read_json("project.json")
         lock = pe.read_json("upstream.lock.json")
         project["wims"]["boot"].pop("replacement")
+        project.pop("media_source", None)
         project["wim_remove"] = {}
         project["packages"] = []
         with patch.object(pe, "read_json", side_effect=[project, lock]):

@@ -6,8 +6,8 @@ OmniAI PE 的目标是保留 HotPE V2.8.251018 的非美化功能，以微软官
 
 | 层 | 输入与维护位置 | 更新时处理 |
 | --- | --- | --- |
-| 外置媒体 | `upstream.lock.json` 锁定原版 ISO、引导镜像、外置 HPM 和驱动 | 继续校验原版媒体的路径与字节 |
-| Windows 底座 | 官方 amd64 WinPE WIM，私有输入，清单记录哈希 | 同分支更新时替换完整 WIM 或离线维护其副本 |
+| 外置媒体 | `inputs/media/` 与 `inputs/boot/` 保存解包后的固定资源，`upstream.lock.json` 锁定其路径和哈希 | 更新基准资源时同步更新上游锁 |
+| Windows 底座 | `mise run init` 按配方从微软端点取得原始 WinPE WIM 和 MSU，并缓存经过校验的底座 | 同分支更新时修改配方 |
 | Windows 组件 | 与底座同分支、同架构的 Microsoft CAB/MSU，按依赖顺序列在清单 | 核对适用性，重新装配并检查内核版本 |
 | HotPE 功能 | 原版工具以目录包或文件包移植，使用各自哈希；Windows 功能依赖单独维护 | 重用通过验证的工具包，逐项处理缺失的系统依赖 |
 | 启动与外观 | `src/wim/boot/1/` 存放脚本和配置；新底座有显式配置清单 | 保留工具入口、快捷方式和硬件初始化；去掉美化入口与资源 |
@@ -16,13 +16,13 @@ OmniAI PE 的目标是保留 HotPE V2.8.251018 的非美化功能，以微软官
 
 [`project.json`](manifests/project.json) 是本地与 CI 共用的构建配置。同分支更新先复用已验收的工具包和启动配置，再核对新底座所需的微软组件、驱动和运行库。
 
-当前候选使用微软 Windows 11 24H2 LTSC 安装介质的 `sources/boot.wim` 索引 1。该 WinPE 已注册 AudioCore 和 AudioDrivers。将原始双索引 WIM 和官方 MSU 放到 [安装介质底座配方](manifests/base-setup-26100.9974.json) 指定的私有输入路径，在管理员 PowerShell 制备当前底座。
+当前构建使用微软 Windows 11 24H2 LTSC 安装介质的 `sources/boot.wim` 索引 1。该 WinPE 已注册 AudioCore 和 AudioDrivers。在管理员 PowerShell 运行初始化任务。原始双索引 WIM 和官方 MSU 来源见 [安装介质底座配方](manifests/base-setup-26100.9974.json)。
 
 ```powershell
-mise run prepare-base base-setup-26100.9974.json
+mise run init
 ```
 
-每个 MSU 放在独立目录。脚本校验源 WIM 和 MSU 的 SHA-256，用 DISM 将索引 1 导出成单索引可启动 WIM，依序提交更新。核对内核版本后写入 `inputs/wims/` 并打印 SHA-256。制备日志位于 `.work/base/Microsoft-SetupPE-26100.9974-amd64/`。另有 [ADK 底座配方](manifests/base-26100.9974.json) 可用于对照。
+每个 MSU 放在独立目录。脚本校验源 WIM 和 MSU 的 SHA-256，用 DISM 将索引 1 导出成单索引可启动 WIM，依序提交更新。核对内核版本后，将底座和本次生成的哈希写入按配方哈希区分的 `.work/kernel/` 缓存。初始化日志保存在对应的 `.work/init-*/service/` 目录。另有 [ADK 底座配方](manifests/base-26100.9974.json) 可用于对照。
 
 更新到下一版时，复制当前配方并修改目标内核版本、输出文件名、适用的检查点与累积更新及其哈希。制备新底座后，将输出路径、SHA-256 和目标 `kernel_version` 写入迁移清单的 `wims.boot.replacement`，递增项目版本，再用迁移清单运行 `check` 和 `build`。构建在完成 WIM 装配后读取启动索引中内核文件的版本，未达到目标版本时停止生成 ISO。GitHub Actions 使用与迁移清单哈希匹配的已制备 WIM。
 
@@ -64,7 +64,7 @@ mise run prepare-compat $hotpeWim $winpeWithPackages $windowsInstallWim windows-
 
 旧版程序的 WinMM 音频依赖由同版本微软安装映像提供。文件层保留原版所需的 `.drv` 和 `.acm` 文件，注册表层合并 64 位和 32 位 `Drivers32` 映射。验收用系统声音面板确认默认扬声器，并用 WinMM 播放 WAV。 [微软 WinMM 组件说明](https://learn.microsoft.com/en-us/windows-hardware/drivers/audio/user-mode-wdm-audio-components)
 
-GitHub Actions 的手动触发和启用后的 push 构建使用 `project.json`。`pe-build` 的私有压缩包需要包含项目配置引用的全部输入。
+GitHub Actions 的手动触发和启用后的 push 构建使用 `project.json`，通过 Git LFS 取得固定资源，再使用与本地相同的初始化任务制备底座。
 
 ## 迁移验收
 
