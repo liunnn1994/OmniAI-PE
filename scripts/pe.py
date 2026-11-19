@@ -721,9 +721,9 @@ def apply_setup_path_relocation(mount):
 def service_wim(stage, path, index, plan, inputs):
     dism = tool("DISM", "dism.exe")
     service = stage
-    if plan["windows_drivers"] and not Path(str(stage).lower()).exists():
-        # DISM 驱动提供程序会在加载 drvstore.dll 前将完整挂载路径转成小写。
-        service = Path(tempfile.mkdtemp(prefix="omniai-pe-dism-"))
+    if plan["windows_packages"] or (plan["windows_drivers"] and not Path(str(stage).lower()).exists()):
+        # 累积更新展开后路径很深，驱动提供程序还会将挂载路径转成小写。
+        service = Path(tempfile.mkdtemp(prefix="pe-"))
         require(Path(str(service).lower()).exists(), f"DISM needs a case-insensitive temp path: {service}")
         (service / "scratch").mkdir()
     mount = service / f"mount-{index}"
