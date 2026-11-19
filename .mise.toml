@@ -1,0 +1,42 @@
+[tools]
+python = "3.13.15"
+
+[tasks.fetch-inputs]
+description = "下载或恢复私有构建输入"
+run = "python scripts/pe.py fetch-inputs"
+
+[tasks.check]
+description = "校验构建配置和输入"
+run = "python scripts/pe.py check"
+
+[tasks.stage]
+description = "装配 PE 媒体目录"
+run = "python scripts/pe.py stage"
+
+[tasks.build]
+description = "构建可启动的 OmniAI PE ISO"
+run = "python scripts/pe.py build"
+
+[tasks.bundle-inputs]
+description = "打包私有构建输入"
+run = "python scripts/pe.py bundle-inputs"
+
+[tasks.hash]
+description = "输出输入文件或目录的 SHA-256"
+run = "python scripts/pe.py hash"
+
+[tasks.prepare-base]
+description = "按配方制备微软 WinPE 底座"
+run = "python scripts/pe.py prepare-base"
+
+[tasks.prepare-compat]
+description = "制备兼容文件和驱动包"
+run = "python scripts/prepare_compat.py"
+
+[tasks.test]
+description = "运行构建脚本的单元测试"
+run = "python -m unittest discover -s tests -v"
+
+[tasks.pe]
+description = "运行 PE 命令行，可指定 --manifest 等全局选项"
+run = "python scripts/pe.py"

@@ -1,0 +1,14 @@
+========================== About this file ==========================
+This file is used to mark this image as "Ventoy Compatible".
+
+========================== About Ventoy =============================
+https://www.ventoy.net
+
+Ventoy is an open source tool to create bootable USB from ISO files. 
+With ventoy, you just copy the iso file to the USB drive and boot it. 
+You can copy many iso files at a time and ventoy will give you a boot menu to select them.
+Both Legacy BIOS and UEFI are supported in the same way. 
+Most type of OS are supported, Windows/Linux/Unix/VMware/XenServer ... 
+
+=============================== Contact =============================
+Mail all comments and suggestions to longpanda admin@ventoy.net 

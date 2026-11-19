@@ -1,0 +1,181 @@
+{
+  "iso": {
+    "file": "HotPE-V2.8.251018.iso",
+    "size": 1109088256,
+    "sha256": "2d8de0efde0017d60374da9310125d76085d87aad5a2300701949afb18a73ad4"
+  },
+  "boot": {
+    "bios": {
+      "size": 4096,
+      "sha256": "f425e135aac26b55e2bac655e62e2ce0b16255226c583d9ab43b2e93e8a6d932"
+    },
+    "uefi": {
+      "size": 2949120,
+      "sha256": "ccfb7c3d668e408625d54efcb87d2806649d5efeb1252ecdcf5fdce6a8872c73"
+    }
+  },
+  "media": {
+    "AUTORUN.INF": {
+      "size": 25,
+      "sha256": "0a26ed4beffccebdbeaea0c140c7b1a27f7bad4260bd52c02ebd03157c3a0e6a"
+    },
+    "Boot/bcd": {
+      "size": 20480,
+      "sha256": "7d55b5f4b1fbc219aa0097b2667a0e40ad453aab71759061613354e5a2b34a40"
+    },
+    "Boot/boot.sdi": {
+      "size": 3170304,
+      "sha256": "cd2c00ce027687ce4a8bdc967f26a8ab82f651c9becd703658ba282ec49702bd"
+    },
+    "Boot/fonts/chs_boot.ttf": {
+      "size": 3696672,
+      "sha256": "f9706ddc773c042f7df2d291498ac63b5bfc8a35d1403621e368b8cc64c04def"
+    },
+    "Boot/fonts/wgl4_boot.ttf": {
+      "size": 50044,
+      "sha256": "49777b62f7a39c6eee5795df8bc5608c6fb1d68451cd5703bbeefdfceb7253d9"
+    },
+    "Boot/resources/bootres.dll": {
+      "size": 169320,
+      "sha256": "f3d807c3e76323abf08e3284f4fd305beb7f483cf6a051a5ce18258ff96978a1"
+    },
+    "Boot/zh-cn/bootmgr.exe.mui": {
+      "size": 65888,
+      "sha256": "b7abfe6ff13a1d362871668e34b12a6692b680e1e41bc0e97aa79cce2ebab612"
+    },
+    "bootmgr": {
+      "size": 473364,
+      "sha256": "6374f092f1f09fa175a7a2ef03accc53144638c3378f02661e0d6fcecdfc5c88"
+    },
+    "bootmgr.efi": {
+      "size": 2746288,
+      "sha256": "6c18eadc7dcd9c98437266c64bc2c5a35c255db4385bae86ed112b3b8e8d2782"
+    },
+    "EFI/BOOT/bootx64.efi": {
+      "size": 1590664,
+      "sha256": "a2d2cb596162cd34fbd52202cd875ddb119deca5096e911d29454c401a2d56a9"
+    },
+    "EFI/BOOT/zh-cn/bootx64.efi.mui": {
+      "size": 65904,
+      "sha256": "d32f22c06992ee0f4605fc171cc357bb2c8e89c55c07e0c9614b8bbbe9dfa75b"
+    },
+    "EFI/MICROSOFT/BOOT/BCD": {
+      "size": 20480,
+      "sha256": "0d9403b130f51d5ac194e4b5acacc8e2760787aa78cb89ed0fdb559263055838"
+    },
+    "EFI/MICROSOFT/BOOT/fonts/chs_boot.ttf": {
+      "size": 3696824,
+      "sha256": "2dd7711169a03e6dd64bad662223b746d161dd60aefa472afbfa3981c0b7e198"
+    },
+    "EFI/MICROSOFT/BOOT/fonts/wgl4_boot.ttf": {
+      "size": 50044,
+      "sha256": "a3dda256eab6124e8d0857271dcb992a335edf910af3ba47d621e69f6672c8c3"
+    },
+    "EFI/MICROSOFT/BOOT/memtest.efi": {
+      "size": 2506656,
+      "sha256": "dddcefc74568a2b3d119bb676bc7f745b55844b4d473806bce98396e114fa582"
+    },
+    "EFI/MICROSOFT/BOOT/resources/bootres.dll": {
+      "size": 169376,
+      "sha256": "742c7341295a0200be35431643ac964d0deb3d881be2d14792abf37d8f386785"
+    },
+    "HotPE/Boot.wim": {
+      "size": 670543552,
+      "sha256": "71d17bc708fb7085745acc0168c8c176d47e20c6ee6728e749dabe63768d4c72"
+    },
+    "HotPE/confi.ini": {
+      "size": 216,
+      "sha256": "15e330a4e76d7591f2a8ac1ef6294ae1eb3c4ed648a549d3391e50d0f7f024b1"
+    },
+    "HotPE/Data/Drives/Network.7z": {
+      "size": 257743745,
+      "sha256": "6d57b30c11b88914b1a8b9b6ece8a0513385ca3a6d09d7892590ed4228e4ce4b"
+    },
+    "HotPE/Data/Drives/Network.index": {
+      "size": 2735189,
+      "sha256": "d65e2cdf2d6045f33e9fddf9c0eee9112214d3b033c434e2afce821adf64bff8"
+    },
+    "HotPE/Data/Drives/说明.txt": {
+      "size": 56,
+      "sha256": "047da043c8e6695bdb56d2fa99b444c78cc929c3ccc32085677f443016b95442"
+    },
+    "HotPE/HotPE.INI": {
+      "size": 192,
+      "sha256": "2cfa42e0331f2c79e472987d3ceb196e0b207f82276ee3963e880252f820bd84"
+    },
+    "HotPE/目录说明.txt": {
+      "size": 125,
+      "sha256": "403272ca59676f7ba783a07622ad499ad884a8d915aec38dc90e02e50f396e2b"
+    },
+    "HotPE.ico": {
+      "size": 432254,
+      "sha256": "73548906cd22cbeefc28f3d9fb987f73afe89d018a35110f861cfcc3689d943c"
+    },
+    "HotProgMods/Browser_VirtualHotBar_C86_[PreInstall].HPM": {
+      "size": 50395613,
+      "sha256": "8a4954ae3624e4da4b571f0786e43f26e51a7dc6c6bdc6ffd7ce39bd1c88f6fe"
+    },
+    "HotProgMods/DiskGenius_VirtualHotBar_6.0.1.1645_[PreInstall].HPM": {
+      "size": 6912207,
+      "sha256": "bc6bb4975c6b30a44e7c2b119b6f2a935fe9afd8ac39a1bb4e7075278ba60b4d"
+    },
+    "HotProgMods/Dism++_VirtualHotBar_10.1.1002.1_[PreInstall].HPM": {
+      "size": 1920467,
+      "sha256": "2576db98d91f1307cc31a5f75be995c6a66770c3fae02c90a0caa1d8f6b76dca"
+    },
+    "HotProgMods/MoreTools_VirtualHotBar_2.8_[PreInstall].HPM": {
+      "size": 46996828,
+      "sha256": "5ac4b0241337c5f3b9642f0a1850c0f74ebe72531fc32773af18929778fd0b0f"
+    },
+    "HotProgMods/NT6Bootfix_VirtualHotBar_1.0.2.3_[PreInstall].HPM": {
+      "size": 688972,
+      "sha256": "f0b7b2a0fcdbb063fc5027c464d2a6d6bcaac845ed01f066847d2f26f534a97b"
+    },
+    "HotProgMods/NTPWEDIT_VirtualHotBar_2.1.0.6357_[PreInstall].HPM": {
+      "size": 379277,
+      "sha256": "502a73d842645839cac1e0d66b10fc02918e24dd8905568ec508a4156038facd"
+    },
+    "HotProgMods/PartAssist_VirtualHotBar_10.7_[PreInstall].HPM": {
+      "size": 21194423,
+      "sha256": "6547624eac4c5a5140c881e9a560edfbd3e53dbb322bde2c8e8d8481fc7e874e"
+    },
+    "HotProgMods/WinNTSetup_VirtualHotBar_5.4.1.0_[PreInstall].HPM": {
+      "size": 1437640,
+      "sha256": "ba27378ddc6dbf0c65e1135bc11422afce5145e32c59ac5ca566aa03b5429edf"
+    },
+    "HotProgMods/WIT_VirtualHotBar_25H2_[PreInstall].HPM": {
+      "size": 25423681,
+      "sha256": "0a52fa0706482b9d706ba9f43454184e1ed81136292903d0be667cfac4013b36"
+    },
+    "HotProgMods/目录说明.txt": {
+      "size": 273,
+      "sha256": "6726f03b41556bbc4837a384f038ca14fcdbcad2e8021f539bf68afbf82c777a"
+    },
+    "ventoy.dat": {
+      "size": 724,
+      "sha256": "5600979f013961a4f0b8dd5ab261122e9257535a33bcbe29ff94e4bdcd48f63f"
+    }
+  },
+  "wims": {
+    "boot": {
+      "path": "HotPE/Boot.wim",
+      "image_count": 1,
+      "boot_index": 1
+    }
+  },
+  "configs": {
+    "media": {
+      "HotPE/HotPE.INI": "2cfa42e0331f2c79e472987d3ceb196e0b207f82276ee3963e880252f820bd84",
+      "HotPE/confi.ini": "15e330a4e76d7591f2a8ac1ef6294ae1eb3c4ed648a549d3391e50d0f7f024b1",
+      "ventoy.dat": "5600979f013961a4f0b8dd5ab261122e9257535a33bcbe29ff94e4bdcd48f63f"
+    },
+    "boot/1": {
+      "Windows/Pecmd.ini": "6232176d19cbadcfc0c8df8dec885c1ecc4707dcc15ed593f9792028910cc6c5",
+      "Program Files/PETools.ini": "8304543be1903b0e11f4f03aef2995d634db45c310606d4ff1564061509fca6e",
+      "Program Files/HPM/HPM.WCS": "10a12f86293fd76f49b4dd3d08ba848240727eaa035d5d7e1d9c0384b648fe2c",
+      "Program Files/HPM/HPMLoad.WCS": "ceb5dae78284bcf490d1df55c2b3ef75b1f0496391ef62280fe2d31b7265dab1",
+      "Program Files/HPM/HPMLoad_Default.WCS": "3246d8a9a3e90893847f53fe0d3d586c664eaf7e7b0f24d1d0c1b97cac840a4b",
+      "Program Files/HPM/HPMLoadClearDefaultMode.WCS": "f8785c1791b3586087dba97a00bc121503f4b2b1e8512ac99571b28b135362c4"
+    }
+  }
+}

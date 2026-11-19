@@ -1,0 +1,17 @@
+{
+  "kernel_version": "10.0.26100.9974",
+  "base": {
+    "source": "wims/Microsoft-WinPE-26100-amd64.wim",
+    "sha256": "fbcbdb1c6651ab3a69384e9d4f95f2c02321318603849453b252e21e827c8197"
+  },
+  "updates": [
+    {
+      "source": "updates/26100/checkpoint/KB5043080-amd64.msu",
+      "sha256": "819632610a101af11c72907fb13ff05b5fb4222c0e263ee9a03bcc1d1d5f26a4"
+    },
+    {
+      "source": "updates/26100/rollup/KB5132061-amd64.msu",
+      "sha256": "8966a4ea203519c0e082dc1193580b723ec86e21bd72009ac9781e8014ae798b"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+﻿//删除默认模式标记
+FORX !\HotProgMods\DefaultMark.txt,Mark,1,TEAM FILE %Mark%
+
+//删除默快速式标记
+FORX !\HotProgMods\QuickMark.txt,Mark,1,TEAM FILE %Mark%

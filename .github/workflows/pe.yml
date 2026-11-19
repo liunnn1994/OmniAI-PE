@@ -1,0 +1,98 @@
+name: OmniAI PE
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
+        with:
+          version: '2026.11.8'
+      - name: 检查源码并运行单元测试
+        run: |
+          mise run test
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          mise run check -- --without-inputs
+
+  build:
+    needs: check
+    if: >-
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+      (github.event_name == 'workflow_dispatch' ||
+        (github.event_name == 'push' && vars.OMNIAI_AUTO_BUILD == '1'))
+    runs-on: windows-2025
+    timeout-minutes: 45
+    environment: pe-build
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
+        with:
+          version: '2026.11.8'
+          cache: false
+      - name: 安装 Windows ADK 部署工具
+        run: |
+          $envPath = Join-Path ${env:ProgramFiles(x86)} 'Windows Kits/10/Assessment and Deployment Kit/Deployment Tools/amd64/Oscdimg/oscdimg.exe'
+          if (-not (Test-Path -LiteralPath $envPath)) {
+            $installer = Join-Path $env:RUNNER_TEMP 'adksetup.exe'
+            Invoke-WebRequest 'https://go.microsoft.com/fwlink/?linkid=2289980' -OutFile $installer
+            $signature = Get-AuthenticodeSignature -LiteralPath $installer
+            if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch '\bMicrosoft Corporation\b') {
+              throw 'Windows ADK 安装程序的签名无效'
+            }
+            $setup = Start-Process -FilePath $installer -ArgumentList '/quiet /norestart /features OptionId.DeploymentTools' -WindowStyle Hidden -Wait -PassThru
+            if ($setup.ExitCode -notin 0, 3010 -or -not (Test-Path -LiteralPath $envPath)) {
+              throw "部署工具安装失败，退出代码为 $($setup.ExitCode)"
+            }
+          }
+          "OSCDIMG=$envPath" >> $env:GITHUB_ENV
+          "DISM=$(Join-Path (Split-Path (Split-Path $envPath)) 'DISM/dism.exe')" >> $env:GITHUB_ENV
+          "SEVENZIP=$(Join-Path $env:ProgramFiles '7-Zip/7z.exe')" >> $env:GITHUB_ENV
+      - name: 下载私有构建输入
+        env:
+          OMNIAI_INPUTS_URL: ${{ secrets.OMNIAI_INPUTS_URL }}
+          OUTPUT_URL: ${{ secrets.OMNIAI_OUTPUT_URL }}
+          PRIVATE_REPO: ${{ github.event.repository.private }}
+        run: |
+          if ($env:OMNIAI_INPUTS_URL -notlike 'https://*') { throw '请在 pe-build 环境的 OMNIAI_INPUTS_URL 机密中配置 HTTPS 下载地址' }
+          if ($env:PRIVATE_REPO -ne 'true' -and $env:OUTPUT_URL -notlike 'https://*') {
+            throw '公开仓库需要在 OMNIAI_OUTPUT_URL 中配置私有 HTTPS 上传地址'
+          }
+          mise run fetch-inputs
+      - name: 构建 ISO
+        run: mise run build
+      - name: 将 ISO 上传到私有对象存储
+        if: ${{ !github.event.repository.private }}
+        env:
+          OUTPUT_URL: ${{ secrets.OMNIAI_OUTPUT_URL }}
+        run: |
+          $iso = @(Get-ChildItem -LiteralPath dist -Filter 'OmniAI-PE-*.iso' -File -Recurse)
+          if ($iso.Count -ne 1) { throw '应当恰好生成一个 ISO 文件' }
+          $ProgressPreference = 'SilentlyContinue'
+          try {
+            Invoke-WebRequest -Uri $env:OUTPUT_URL -Method Put -InFile $iso[0].FullName -ContentType 'application/octet-stream' | Out-Null
+          } catch {
+            throw '无法将 ISO 上传到私有对象存储'
+          }
+          Get-Content -LiteralPath "$($iso[0].FullName).sha256" >> $env:GITHUB_STEP_SUMMARY
+      - name: 上传私有 Actions 构建产物
+        if: ${{ github.event.repository.private }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: omniai-pe
+          path: |
+            dist/*/OmniAI-PE-*.iso
+            dist/*/OmniAI-PE-*.iso.sha256
+          if-no-files-found: error
+          compression-level: 0

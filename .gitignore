@@ -1,0 +1,5 @@
+/inputs/
+/.work/
+/dist/
+/.omniai-inputs-*/
+__pycache__/

@@ -1,0 +1,465 @@
+{
+  "version": "0.3.24",
+  "volume_label": "OMNIAI_PE",
+  "wims": {
+    "boot": {
+      "path": "HotPE/Boot.wim",
+      "image_count": 1,
+      "boot_index": 1,
+      "replacement": {
+        "source": "wims/Microsoft-SetupPE-26100.9974-amd64.wim",
+        "sha256": "c954eba390fef4652c5b50126595de0da62a84303d4b132e925e657bd7f7f98a",
+        "kernel_version": "10.0.26100.9974",
+        "configs": {
+          "1": [
+            "Program Files/HPM/HPM.WCS",
+            "Program Files/PETools.ini",
+            "Windows/System32/OmniAI-Devices.ps1",
+            "Windows/System32/OmniAI-Start.cmd",
+            "Windows/System32/startnet.cmd",
+            "Windows/OmniAI-Devices.ini",
+            "Program Files/PETools/PlainAppearance.reg",
+            "Windows/System32/winpeshl.ini"
+          ]
+        },
+        "windows_packages": {
+          "1": [
+            {
+              "source": "updates/26100/optional/WinPE-FontSupport-ZH-CN.cab",
+              "sha256": "e2cba75ab4e4be6a5c03ccce22212db89ddfab63fc880899168dd3f931b628fd"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-WMI.cab",
+              "sha256": "d3cafe5afb7a847889bc6770f11aa3b9c6046b4c46249f50a892b795d4e73401"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-WMI_zh-cn.cab",
+              "sha256": "1d8556f1f8e5cb5565b68117f6643c51eba4eb369355b5e4cc1c42e3b83e1f29"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-NetFx.cab",
+              "sha256": "ce42bae126df62012abe3c48e8dcdc299c675d25c9b59885bf25d20f59f6a464"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-NetFx_zh-cn.cab",
+              "sha256": "99788744bf01418bb784f618b20bdefffaef2d32384b2afe32d68bbf7a1707e8"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-Scripting.cab",
+              "sha256": "0466e98cfcb76720ce65eda089c0d290f6c925406a01ffff03a2542ff04b5cdd"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-Scripting_zh-cn.cab",
+              "sha256": "02f333825d59d3e5a0735c04589333de3a372ec05d8ccf9ae32a1d312286aa21"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-PowerShell.cab",
+              "sha256": "76e6612389c15fb046cfd17020590da51decdeb94c8d7c584d35f93bc7e20bb7"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-PowerShell_zh-cn.cab",
+              "sha256": "fe7511fde12cb3e338bb2bee181e65cd241a6519651d3a64affb47dbaefa483a"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-DismCmdlets.cab",
+              "sha256": "08c5c2408d38b39ce88a18d93d96e01729d9cfd1da40421e1283870418bf78ba"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-DismCmdlets_zh-cn.cab",
+              "sha256": "df9bbf0bdb045c51e2d8ab9b9b902a81856181b52bbb6c7e92370a8a0ff84929"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-SecureStartup.cab",
+              "sha256": "f8ae41b03360411752169f02cf29225e60a2212e5709c7572e5b6901efa03e74"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-SecureStartup_zh-cn.cab",
+              "sha256": "5ea5d4c1df24d3e8ff33e76c7c4ab7d54d6d4394fc81fd64f64494a47ce68639"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-StorageWMI.cab",
+              "sha256": "6517f5f546fa3d70f43bc578ef667e37209c42fa555fcfaa112ad001e7b4455b"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-StorageWMI_zh-cn.cab",
+              "sha256": "fa160cf30eb6fa7eb86c3928a2ace128946df836f7fbbe6815a1fc41f9f95f9e"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-EnhancedStorage.cab",
+              "sha256": "7bbc4b3ac5da5e6accc693b8c90b06878ddfb302e19102a33746a6259378992f"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-EnhancedStorage_zh-cn.cab",
+              "sha256": "f20c1b45d4b1948a4dc2cd902583c14a24e322ba2d42115cd8dd3e63aaff1cec"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-FMAPI.cab",
+              "sha256": "e2084149d23b421e5c13a9344f61e0af2e5cafd66c6fc4a9670460783e2b0d80"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-HTA.cab",
+              "sha256": "d9794dc242765d4cbcf61289379159cbc5530ed9182647635fe440fa4ac24c31"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-HTA_zh-cn.cab",
+              "sha256": "34b616d361f2b0ff4398b53d34da3dc707c5d47a5d476f3f6f04fe06627df902"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-MDAC.cab",
+              "sha256": "0aaa14350b7e771036f3b82e81ed07ca3db42164187b7b936245c6af00980db5"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-MDAC_zh-cn.cab",
+              "sha256": "8fc108050fe55c359386d33c478f6b229257da207cf0f36f2e2c68980ebcc7b1"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-Dot3Svc.cab",
+              "sha256": "b2d9dcdd939994fa6e9a54aa714b5539112e4a78c8e07f9fe9f38a068a0f367c"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-Dot3Svc_zh-cn.cab",
+              "sha256": "38958aa6d5d684f206d3be6109243d4bf526951f0ba1f64e0691bea6e91894d6"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-RNDIS.cab",
+              "sha256": "9d7d3e270c6f1ad0140bcf610ac5ebb0301d117665b1170aa70556f32608e45a"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-RNDIS_zh-cn.cab",
+              "sha256": "985c484641ffeadf35f8df286995607d872f80e16137d388eccce89f04a2a738"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-PPPoE.cab",
+              "sha256": "a2f0d44166abede58f3edf87d45356c114590f41343939f13e8e424ce943891c"
+            },
+            {
+              "source": "updates/26100/optional/WinPE-PPPoE_zh-cn.cab",
+              "sha256": "f3afe08e8a049a0eccd3164dc7f0758c9adef3f1169cbad75fe3d6bec87a5064"
+            }
+          ]
+        },
+        "windows_features": {
+          "1": {
+            "locale": "zh-CN",
+            "relocate_setup_paths": true,
+            "files": {
+              "source": "packages/winpe-26100.9974-compat-0324/files",
+              "sha256": "44c913122dae4e09289cbcfeae0a9f823123c869c9964c10e8ab1d72ac3ed593"
+            },
+            "drivers": {
+              "source": "packages/windows-setuppe-26100.9974-driver-delta",
+              "sha256": "e3be9b6134718cfa6e44c3e191f4c415fcd5de96505d162a48f710f17f7ae0af"
+            },
+            "registry": {
+              "SYSTEM": {
+                "source": "registry/hotpe-2.8/SYSTEM",
+                "sha256": "28614f021624228734b3fecaaf92bbfdd36277e700107c463b51cc78c61f5dba",
+                "keys": [
+                  "Services/bthenum",
+                  "Services/bthserv",
+                  "Services/deviceassociationservice",
+                  "Services/eaphost",
+                  "Services/lanmanserver",
+                  "Services/lanmanworkstation",
+                  "Services/mrxdav",
+                  "Services/mrxsmb10",
+                  "Services/msiscsi",
+                  "Services/msiserver",
+                  "Services/nativewifip",
+                  "Services/ndisuio",
+                  "Services/netprofm",
+                  "Services/termservice",
+                  "Services/vwififlt",
+                  "Services/w32time",
+                  "Services/wcmsvc",
+                  "Services/webclient",
+                  "Services/winmgmt",
+                  "Services/wlansvc"
+                ]
+              },
+              "SOFTWARE": {
+                "source": "registry/windows-26100.9974/SOFTWARE",
+                "sha256": "05636507bb60c048ec04ff0b68208c5f9ba8ec9cf5572d8e834961baa68ae167",
+                "keys": [
+                  "Classes/.msc",
+                  "Classes/MSCFile",
+                  "Classes/TypeLib/{aeb84c80-95dc-11d0-b7fc-b61140119c4a}",
+                  "Classes/CLSID/{3c5f432a-ef40-4669-9974-9671d4fc2e12}",
+                  "Classes/CLSID/{43136eb5-d36c-11cf-adbc-00aa00a80033}",
+                  "Classes/CLSID/{7086ad76-44bd-11d0-81ed-00a0c90fc491}",
+                  "Classes/CLSID/{7f1899da-62a6-11d0-a2c6-00c04fd909dd}",
+                  "Classes/CLSID/{ae054212-3535-4430-83ed-d501aa6680e6}",
+                  "Classes/CLSID/{aeb84c83-95dc-11d0-b7fc-b61140119c4a}",
+                  "Classes/CLSID/{c96401cc-0e17-11d3-885b-00c04f72c717}",
+                  "Classes/CLSID/{dbfca500-8c31-11d0-aa2c-00a0c92749a3}",
+                  "Classes/CLSID/{e13b6686-3f39-11d0-96f6-00a0c9191601}",
+                  "Classes/CLSID/{e13b6688-3f39-11d0-96f6-00a0c9191601}",
+                  "Classes/CLSID/{f1e752c3-fd72-11d0-aef6-00c04fb6dd2c}",
+                  "Classes/CLSID/{fac1d9c0-0296-11d1-a840-00a0c92c9d5d}",
+                  "Classes/CLSID/{0f7434b6-59b6-4250-999e-d168d6ae4293}",
+                  "Classes/CLSID/{7775dec3-6a3e-4c57-bac2-4f1774e54b1b}",
+                  "Classes/CLSID/{777ba851-2498-4875-933a-3067de883070}",
+                  "Classes/CLSID/{777ba87c-2498-4875-933a-3067de883070}",
+                  "Classes/CLSID/{777ba8d2-2498-4875-933a-3067de883070}",
+                  "Classes/CLSID/{777ba8e3-2498-4875-933a-3067de883070}",
+                  "Classes/CLSID/{777ba8e9-2498-4875-933a-3067de883070}",
+                  "Classes/CLSID/{77ca5a71-1d99-4e2a-8d16-d2d7d00e9a9b}",
+                  "Classes/CLSID/{77ca5aa0-1d99-4e2a-8d16-d2d7d00e9a9b}",
+                  "Classes/CLSID/{926749fa-2615-4987-8845-c33e65f2b957}",
+                  "Classes/CLSID/{e2b71183-b72f-496a-8f5a-f1ac0d331471}",
+                  "Classes/Interface/{3a652e0f-02b9-4fa8-9df9-4760467266bf}",
+                  "Classes/Interface/{a4c9199b-a147-48fd-bc15-27388609d056}",
+                  "Classes/Interface/{e2b71183-b72f-496a-8f5a-f1ac0d331471}",
+                  "Classes/Wow6432Node/CLSID/{031e4825-7b94-4dc3-b131-e946b44c8dd5}",
+                  "Classes/Wow6432Node/CLSID/{056440fd-8568-48e7-a632-72157243b55b}",
+                  "Classes/Wow6432Node/CLSID/{104846ab-42b1-4e38-a80d-136f78c3f258}",
+                  "Classes/Wow6432Node/CLSID/{1eeb5b5a-06fb-4732-96b3-975c0194eb39}",
+                  "Classes/Wow6432Node/CLSID/{1f486a52-3cb1-48fd-8f50-b8dc300d9f9d}",
+                  "Classes/Wow6432Node/CLSID/{20d04fe0-3aea-1069-a2d8-08002b30309d}",
+                  "Classes/Wow6432Node/CLSID/{4df0c730-df9d-4ae3-9153-aa6b82e9795a}",
+                  "Classes/Wow6432Node/CLSID/{53bd6b4e-3780-4693-afc3-7161c2f3ee9c}",
+                  "Classes/Wow6432Node/CLSID/{59031a47-3f72-44a7-89c5-5595fe6b30ee}",
+                  "Classes/Wow6432Node/CLSID/{71f96385-ddd6-48d3-a0c1-ae06e8b055fb}",
+                  "Classes/Wow6432Node/CLSID/{76765b11-3f95-4af2-ac9d-ea55d8994f1a}",
+                  "Classes/Wow6432Node/CLSID/{9ac9fbe1-e0a2-4ad6-b4ee-e212013ea917}",
+                  "Classes/Wow6432Node/CLSID/{a8cdff1c-4878-43be-b5fd-f8091c1c60d0}",
+                  "Classes/Wow6432Node/CLSID/{ae054212-3535-4430-83ed-d501aa6680e6}",
+                  "Classes/Wow6432Node/CLSID/{af02484c-a0a9-4669-9051-058ab12b9195}",
+                  "Classes/Wow6432Node/CLSID/{b8967f85-58ae-4f46-9fb2-5d7904798f4b}",
+                  "Classes/Wow6432Node/CLSID/{c0b4e2f3-ba21-4773-8dba-335ec946eb8b}",
+                  "Classes/Wow6432Node/CLSID/{cdc82860-468d-4d4e-b7e7-c298ff23ab2c}",
+                  "Classes/Wow6432Node/CLSID/{e88865ea-0e1c-4e20-9aa6-edcd0212c87c}",
+                  "Classes/Wow6432Node/CLSID/{f874310e-b6b7-47dc-bc84-b9e6b38f5903}",
+                  "Wow6432Node/Microsoft/Windows/CurrentVersion/Explorer/Desktop/NameSpace",
+                  "Wow6432Node/Microsoft/Windows/CurrentVersion/Explorer/FolderDescriptions",
+                  "Wow6432Node/Microsoft/Windows/CurrentVersion/Explorer/FolderTypes",
+                  "Wow6432Node/Microsoft/Windows/CurrentVersion/Explorer/MyComputer/NameSpace",
+                  "Wow6432Node/Microsoft/Windows/CurrentVersion/Explorer/User Shell Folders",
+                  "Microsoft/MMC/SnapIns/{c96401cc-0e17-11d3-885b-00c04f72c717}",
+                  "Microsoft/MMC/SnapIns/{dbfca500-8c31-11d0-aa2c-00a0c92749a3}",
+                  "Microsoft/Windows NT/CurrentVersion/Drivers32",
+                  "WOW6432Node/Microsoft/Windows NT/CurrentVersion/Drivers32",
+                  "Microsoft/Windows/CurrentVersion/SideBySide/Winners/amd64_microsoft.vc80.crt_1fc8b3b9a1e18e3b_none_751bbd257fdbc422",
+                  "Microsoft/Windows/CurrentVersion/SideBySide/Winners/amd64_microsoft.vc90.crt_1fc8b3b9a1e18e3b_none_a28692199dcba471",
+                  "Microsoft/Windows/CurrentVersion/SideBySide/Winners/amd64_policy.8.0.microsoft.vc80.crt_1fc8b3b9a1e18e3b_none_a0fbb53a85bbf8e1",
+                  "Microsoft/Windows/CurrentVersion/SideBySide/Winners/amd64_policy.9.0.microsoft.vc90.crt_1fc8b3b9a1e18e3b_none_bb22ca2f5e815913",
+                  "Microsoft/Windows/CurrentVersion/SideBySide/Winners/x86_microsoft.vc80.crt_1fc8b3b9a1e18e3b_none_bcc8f3fc9457ed28",
+                  "Microsoft/Windows/CurrentVersion/SideBySide/Winners/x86_microsoft.vc90.crt_1fc8b3b9a1e18e3b_none_ea33c8f0b247cd77",
+                  "Microsoft/Windows/CurrentVersion/SideBySide/Winners/x86_microsoft.windows.c..-controls.resources_6595b64144ccf1df_zh-cn_c634737fd5fcb6b9",
+                  "Microsoft/Windows/CurrentVersion/SideBySide/Winners/x86_microsoft.windows.common-controls_6595b64144ccf1df_none_aaab8e0a9f4bd480",
+                  "Microsoft/Windows/CurrentVersion/SideBySide/Winners/x86_microsoft.windows.gdiplus_6595b64144ccf1df_none_b63c266b1d6d356c",
+                  "Microsoft/Windows/CurrentVersion/SideBySide/Winners/x86_microsoft.windows.i..utomation.proxystub_6595b64144ccf1df_none_e744cdbf06c8e4bf",
+                  "Microsoft/Windows/CurrentVersion/SideBySide/Winners/x86_microsoft.windows.isolationautomation_6595b64144ccf1df_none_7add5f504a3bcb33",
+                  "Microsoft/Windows/CurrentVersion/SideBySide/Winners/x86_microsoft.windows.systemcompatible_6595b64144ccf1df_none_0a4dc6435173f2f1",
+                  "Microsoft/Windows/CurrentVersion/SideBySide/Winners/x86_policy.8.0.microsoft.vc80.crt_1fc8b3b9a1e18e3b_none_e8a8ec119a3821e7",
+                  "Microsoft/Windows/CurrentVersion/SideBySide/Winners/x86_policy.9.0.microsoft.vc90.crt_1fc8b3b9a1e18e3b_none_02d0010672fd8219",
+                  "Microsoft/Windows/CurrentVersion/SMI/WinSxS Settings/x86_microsoft-windows-settings-2011_31bf3856ad364e35_none_d53df90658ea41e6",
+                  "Microsoft/Windows/CurrentVersion/SMI/WinSxS Settings/x86_microsoft-windows-settings-2013_31bf3856ad364e35_none_d53dcb7658ea7528",
+                  "Microsoft/Windows/CurrentVersion/SMI/WinSxS Settings/x86_microsoft-windows-settings-2014_31bf3856ad364e35_none_d53db4ae58ea8ec9",
+                  "Microsoft/Windows/CurrentVersion/SMI/WinSxS Settings/x86_microsoft-windows-settings-2016_31bf3856ad364e35_none_d53d871e58eac20b",
+                  "Microsoft/Windows/CurrentVersion/SMI/WinSxS Settings/x86_microsoft-windows-settings-2017_31bf3856ad364e35_none_d53d705658eadbac",
+                  "Microsoft/Windows/CurrentVersion/SMI/WinSxS Settings/x86_microsoft-windows-settings-2019_31bf3856ad364e35_none_d53d42c658eb0eee",
+                  "Microsoft/Windows/CurrentVersion/SMI/WinSxS Settings/x86_microsoft-windows-settings-2020_31bf3856ad364e35_none_d53f101858e9419c",
+                  "Microsoft/Windows/CurrentVersion/SMI/WinSxS Settings/x86_microsoft-windows-settings-2024_31bf3856ad364e35_none_d53eb4f858e9a820",
+                  "Microsoft/Windows/CurrentVersion/SMI/WinSxS Settings/x86_microsoft-windows-settings_31bf3856ad364e35_none_025c648fcaefab55",
+                  "Microsoft/Windows/CurrentVersion/XWizards/Components/{77ca5a71-1d99-4e2a-8d16-d2d7d00e9a9b}",
+                  "Microsoft/Windows/CurrentVersion/XWizards/Components/{77ca5aa0-1d99-4e2a-8d16-d2d7d00e9a9b}",
+                  "Microsoft/Windows/CurrentVersion/XWizards/Types/0x00000020"
+                ],
+                "multi_strings": {
+                  "Microsoft/Windows NT/CurrentVersion/Svchost": {
+                    "LocalServiceNetworkRestricted": [
+                      "wcmsvc"
+                    ],
+                    "LocalService": [
+                      "w32time",
+                      "bthserv",
+                      "WebClient"
+                    ],
+                    "netsvcs": [
+                      "lanmanserver",
+                      "msiscsi",
+                      "EapHost",
+                      "winmgmt"
+                    ],
+                    "LocalSystemNetworkRestricted": [
+                      "DeviceAssociationService",
+                      "wlansvc"
+                    ],
+                    "netprofm": [
+                      "netprofm"
+                    ],
+                    "NetworkService": [
+                      "lanmanworkstation",
+                      "TermService"
+                    ],
+                    "smbsvcs": [
+                      "lanmanserver"
+                    ],
+                    "WlansvcGroup": [
+                      "wlansvc"
+                    ],
+                    "termsvcs": [
+                      "TermService"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "packages": [
+    {
+      "scope": "boot/1",
+      "source": "packages/windows-26100.9974-driver-catalogs",
+      "target": "Program Files/OmniAI Startup/Driver Catalogs",
+      "sha256": "59a326a6a7caa604ff7bf38914f9d0037afef9fec029bfb6eb37c4d9e0e4712f"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-no-theme/Program Files/7-Zip",
+      "target": "Program Files/7-Zip",
+      "sha256": "96052706995aaaa035e1c778f37dc0be6660488c24f158bc86ae48a5cc193ff0"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-x86-driver-packages",
+      "target": "Program Files/OmniAI x86 Driver Packages",
+      "sha256": "504a254ef9ab7633289683362d716f56d3f7d0b97a7a4fda1e1935d557c13494"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-no-theme/Program Files/Drives",
+      "target": "Program Files/Drives",
+      "sha256": "a2ca701d48920481555f521d17e37f7cb95a3a7254135122214f5e23fa34a2b6"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-no-theme/Program Files/Edgeless",
+      "target": "Program Files/Edgeless",
+      "sha256": "2c7febc9800a46016eeff796c162bcf6b5f4896501ea4409c150f7addb251bc1"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-no-theme/Program Files/HotSysSetup",
+      "target": "Program Files/HotSysSetup",
+      "sha256": "0d5d36085b68e0c0b67836c7b3a6c2110e83f69f9f887b44bf78f713bb0189c7"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-no-theme/Program Files/HPM",
+      "target": "Program Files/HPM",
+      "sha256": "fdbd849f90f3ad0e5113bb9f50214b550662110b58f4f6fc7594f468c8473ba3"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-no-theme/Program Files/Icons",
+      "target": "Program Files/Icons",
+      "sha256": "143389a247ebc42e2ef8ca467b527fe12f2dffa712857952b8d6fa7c2ef42d53"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-no-theme/Program Files/Imagine",
+      "target": "Program Files/Imagine",
+      "sha256": "c97cab9f2fe84109828bffbe97d2f300317b877c501d96a091ef5ca08bdc8852"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-no-theme/Program Files/PETools",
+      "target": "Program Files/PETools",
+      "sha256": "e3b54b22969e7f6c07d137e995903e3b5c3e76e2913104e5d7dad70e9ffc1d6d"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-no-theme/Program Files/RDTools",
+      "target": "Program Files/RDTools",
+      "sha256": "4be5b45e4f538798ae1033adcfd31ba18be5fbb6f3a832fdd3f6034c4f231191"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-no-theme/Program Files/SogouInput",
+      "target": "Program Files/SogouInput",
+      "sha256": "122e60ae8115cd6a1c1d44dc9818a5cb22cbffa6db7d5f779802ae07d52f31ea"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-no-theme/Program Files/WinXShell",
+      "target": "Program Files/WinXShell",
+      "sha256": "b937d4a0810ad0640133e391e76f5d63a5368cca0495a8f4f1e2416f22b23aa6"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-no-theme/Windows/About.exe",
+      "target": "Windows/About.exe",
+      "sha256": "718573538f417a1437f8f84a508ed44c89a70959cd66b928f5002972c7e9476f"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-no-theme/Windows/System32/Pecmd.exe",
+      "target": "Windows/System32/Pecmd.exe",
+      "sha256": "d818dfe1adb10cf04439fcf59d3faac4f11461042e327efe418036749fb332ab"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-shell-tools/Program Files/StartAllBack",
+      "target": "Program Files/StartAllBack",
+      "sha256": "5cda4a3f3f4eab14c2413ddaf6bede2df0ee7c7081cf223b9c86dc49d913f906"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-shell-tools/Windows/SysWOW64/mspaint.exe",
+      "target": "Windows/SysWOW64/mspaint.exe",
+      "sha256": "fdb5a84bf619cfdb6bbf6c88d657724574ec67393afad56443f0c173bf1afef5"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-shell-tools/Windows/SysWOW64/zh-CN/mspaint.exe.mui",
+      "target": "Windows/SysWOW64/zh-CN/mspaint.exe.mui",
+      "sha256": "a8810d804ceff36a8fef429586131c2fe6150fc3ea08f9849db9279d760af886"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-shell-tools/Windows/System32/calc.exe",
+      "target": "Windows/System32/calc.exe",
+      "sha256": "c6a91cba00bf87cdb064c49adaac82255cbec6fdd48fd21f9b3b96abf019916b"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-shell-tools/Windows/System32/mspaint.exe",
+      "target": "Windows/System32/mspaint.exe",
+      "sha256": "fdb5a84bf619cfdb6bbf6c88d657724574ec67393afad56443f0c173bf1afef5"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-shell-tools/Windows/System32/zh-CN/calc.exe.mui",
+      "target": "Windows/System32/zh-CN/calc.exe.mui",
+      "sha256": "3987f35610fecd773e42746811e6c4b022e9fe6442478a98c330edcd7d59a5d2"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-shell-tools/Windows/System32/zh-CN/mspaint.exe.mui",
+      "target": "Windows/System32/zh-CN/mspaint.exe.mui",
+      "sha256": "a8810d804ceff36a8fef429586131c2fe6150fc3ea08f9849db9279d760af886"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-shell-tools/Windows/SystemResources/mspaint.exe.mun",
+      "target": "Windows/SystemResources/mspaint.exe.mun",
+      "sha256": "717e1378945bd09c89b1b1503c01ced9b09670192bd4b8f2c04e28d0326db6af"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-shell-tools/Windows/System32/drivers/mtpHelper.sys",
+      "target": "Windows/System32/drivers/mtpHelper.sys",
+      "sha256": "8f8790c0775c81195c2feda1ab18bfa53aa6f6bf28ef6597f4ab18575fe60f20"
+    }
+  ],
+  "media_remove": [
+    "AUTORUN.INF",
+    "HotPE.ico"
+  ],
+  "wim_remove": {}
+}

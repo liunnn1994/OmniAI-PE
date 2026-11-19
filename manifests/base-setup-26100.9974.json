@@ -1,0 +1,21 @@
+{
+  "kernel_version": "10.0.26100.9974",
+  "base": {
+    "source": "wims/Microsoft-SetupPE-26100.1742-zh-cn-boot.wim",
+    "sha256": "f988d4c03964697e24b0bd9e219c999d1e6cfc92e2430d75fa4fe013ed9cb29d",
+    "image_count": 2,
+    "boot_index": 2,
+    "index": 1
+  },
+  "output": "Microsoft-SetupPE-26100.9974-amd64.wim",
+  "updates": [
+    {
+      "source": "updates/26100/checkpoint/KB5043080-amd64.msu",
+      "sha256": "819632610a101af11c72907fb13ff05b5fb4222c0e263ee9a03bcc1d1d5f26a4"
+    },
+    {
+      "source": "updates/26100/rollup/KB5132061-amd64.msu",
+      "sha256": "8966a4ea203519c0e082dc1193580b723ec86e21bd72009ac9781e8014ae798b"
+    }
+  ]
+}

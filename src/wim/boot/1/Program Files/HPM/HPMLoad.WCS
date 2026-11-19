@@ -1,0 +1,2 @@
+﻿brow &HPM,,请选择HotPE模块文件,HotPE模块文件(*.HPM)|*.HPM|全部类型|*,0x10001000
+EXEC =HPMLoad.exe %HPM%
