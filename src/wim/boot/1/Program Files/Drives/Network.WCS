@@ -1,0 +1,5 @@
+﻿//加载外置网络驱动
+FORX !\OmniAIPE\Data\Drives\Network.7z,MyNetwork,1,EXEC ="%CurDir%\DrvIndex.exe" -b  "%MyNetwork%" -hide
+
+//加载本地系统驱动(除显卡驱动)
+EXEC ="%CurDir%\DrvIndex.exe" -h -hide

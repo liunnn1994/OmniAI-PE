@@ -1,6 +1,6 @@
 # OmniAI PE 内核更新与功能装配
 
-OmniAI PE 的目标是保留 HotPE V2.8.251018 的非美化功能，以微软官方 WinPE 为系统底座。项目沿用 amd64 26100 分支、BCD 布局、`HotPE/Boot.wim` 路径和索引 1。UEFI 光盘引导镜像取自锁定版本的微软 ADK，BIOS 光盘引导镜像与该版 ADK 一致。媒体上的 BIOS 和 UEFI 启动管理器及配套资源取自 WinPE 映像。
+OmniAI PE 的目标是保留 HotPE V2.8.251018 的非美化功能，以微软官方 WinPE 为系统底座。项目沿用 amd64 26100 分支和索引 1，媒体上的 BIOS 和 UEFI 启动项均指向 `OmniAIPE/Boot.wim`。UEFI 光盘引导镜像取自锁定版本的微软 ADK，BIOS 光盘引导镜像与该版 ADK 一致。媒体上的 BIOS 和 UEFI 启动管理器及配套资源取自 WinPE 映像。
 
 ## 构建边界
 

@@ -200,9 +200,15 @@ def kernel_cache(recipe):
     return safe_path(ROOT, f".work/kernel/{sha256(config)}")
 
 
+def media_path(name, project):
+    renames = project.get("media_renames", {})
+    return "/".join(renames.get(part, part) for part in name.split("/"))
+
+
 def check_fixed_media(media, project, lock):
-    generated = {slot["path"] for slot in project["wims"].values()}
-    expected = {name: record for name, record in lock["media"].items() if name not in generated}
+    generated = {slot["path"] for slot in lock["wims"].values()}
+    expected = {media_path(name, project): record for name, record in lock["media"].items()
+                if name not in generated}
     actual = {name for name, path in tree(media) if path.is_file()}
     require(actual == expected.keys(), f"固定媒体文件清单与上游锁不一致：{media}")
     for name, record in expected.items():
@@ -266,9 +272,23 @@ def load_plan(inputs, with_inputs, manifest="project.json", *, with_kernel=True)
         require(isinstance(project["uefi_prefer_1080p"], bool)
                 and (not project["uefi_prefer_1080p"] or "uefi_default_entry" in project),
                 "UEFI 1080p 首选项需要指定默认启动项")
+    renames = project.get("media_renames", {})
+    require(isinstance(renames, dict), "Expected media renames by path component")
+    for old, new in renames.items():
+        require("/" not in relative(old) and "/" not in relative(new), "Expected media path components")
+    renamed_media = {media_path(name, project).casefold() for name in lock["media"]}
+    require(len(renamed_media) == len(lock["media"]), "Media rename causes a path collision")
+    boot_files = [*BCD_STORES.values(), "Boot/boot.sdi", "bootmgr", "bootmgr.efi"]
+    require(all(media_path(name, project) == name for name in boot_files),
+            "Boot manager, BCD and SDI paths cannot be renamed")
     layouts = {name: {key: value for key, value in slot.items() if key != "replacement"}
                for name, slot in project["wims"].items()}
-    require(layouts == lock["wims"], "WIM paths, image counts and boot indexes must match the lock")
+    locked_layouts = {name: dict(slot, path=media_path(slot["path"], project))
+                      for name, slot in lock["wims"].items()}
+    require(layouts == locked_layouts, "WIM paths, image counts and boot indexes must match the lock")
+    if layouts["boot"]["path"] != lock["wims"]["boot"]["path"]:
+        require(all(project.get("boot_descriptions", {}).get(kind) for kind in BCD_STORES),
+                "Renaming the boot WIM requires boot entries in both BCD stores")
     if "media_source" in project:
         relative(project["media_source"])
         require(all("replacement" in slot for slot in project["wims"].values()),
@@ -299,8 +319,11 @@ def load_plan(inputs, with_inputs, manifest="project.json", *, with_kernel=True)
             scopes[f"{name}/{index}"] = {"root": f"wim/{name}/{index}", "protected": [KERNEL]}
     for scope, plan in scopes.items():
         source = safe_path(ROOT, f"src/{plan['root']}")
-        baseline = {name.casefold(): (name, digest)
-                    for name, digest in lock["configs"].get(scope, {}).items()}
+        baseline = {}
+        for name, digest in lock["configs"].get(scope, {}).items():
+            if scope == "media":
+                name = media_path(name, project)
+            baseline[name.casefold()] = (name, digest)
         files = {name.casefold(): (name, path) for name, path in tree(source)
                  if path.is_file() and not name.casefold().startswith(".replacement/")}
         require(baseline.keys() <= files.keys(), f"Use an explicit removal for upstream files in {source}")
@@ -880,7 +903,7 @@ def prepare_base(inputs, recipe, *, output_dir=None, stage=None):
     return digest
 
 
-def apply_boot_descriptions(media, descriptions, uefi_default=None, *, prefer_1080p=False):
+def apply_boot_descriptions(media, descriptions, uefi_default=None, *, prefer_1080p=False, ramdisks=None):
     for kind, entries in descriptions.items():
         store = safe_path(media, BCD_STORES[kind])
         # BCDEdit 会产生注册表日志，只将修改后的 BCD 放回媒体目录。
@@ -889,6 +912,9 @@ def apply_boot_descriptions(media, descriptions, uefi_default=None, *, prefer_10
             shutil.copyfile(store, editable)
             for entry, description in entries.items():
                 run("bcdedit.exe", "/store", editable, "/set", entry, "description", description)
+                if ramdisks:
+                    for element in ("device", "osdevice"):
+                        run("bcdedit.exe", "/store", editable, "/set", entry, element, ramdisks[kind])
             if kind == "uefi" and uefi_default is not None:
                 if prefer_1080p:
                     # BCDEdit 的 graphicsresolution 不接受 1080p。保留固件模式并在 PE 内请求 1080p。
@@ -941,14 +967,24 @@ def stage_media(project, lock, scopes, inputs):
         require(actual == lock["media"].keys(), "Extracted media file list differs from the upstream lock")
         for path, record in lock["media"].items():
             check_file(safe_path(media, path), record)
+        for name, path in reversed(tree(media)):
+            renamed = media_path(path.name, project)
+            if renamed != path.name:
+                path.rename(safe_path(media, Path(name).with_name(renamed).as_posix()))
     uefi = project.get("uefi_boot")
     if uefi:
         target = stage / "uefi.bin"
         shutil.copyfile(safe_path(inputs, uefi["source"]), target)
         check_file(target, uefi)
     apply_plan(media, scopes["media"], inputs)
+    ramdisks = None
+    boot_path = project["wims"]["boot"]["path"]
+    if boot_path != lock["wims"]["boot"]["path"]:
+        windows_path = "\\" + boot_path.replace("/", "\\")
+        ramdisks = {kind: f"ramdisk=[boot]{windows_path},{options}"
+                    for kind, options in lock["bcd_ramdisk_options"].items()}
     apply_boot_descriptions(media, project.get("boot_descriptions", {}), project.get("uefi_default_entry"),
-                            prefer_1080p=project.get("uefi_prefer_1080p", False))
+                            prefer_1080p=project.get("uefi_prefer_1080p", False), ramdisks=ramdisks)
     for slug, slot in project["wims"].items():
         wim = safe_path(media, slot["path"])
         if "replacement" in slot:
@@ -1065,9 +1101,19 @@ def fetch_inputs(inputs, manifest, archive_path):
 
         unpacked = work / "inputs"
         unpacked.mkdir()
+        project = read_json(manifest)
         with ZipFile(archive_path) as archive:
             for entry in archive.infolist():
-                path = safe_path(unpacked, entry.filename.removesuffix("/"))
+                name = relative(entry.filename.removesuffix("/"))
+                folder, separator, remainder = name.partition("/")
+                if folder == project.get("media_source") and separator:
+                    name = f"{folder}/{media_path(remainder, project)}"
+                elif project.get("media_renames") and folder in {"packages", "registry"}:
+                    package, tail, member = remainder.partition("/")
+                    if package in {"hotpe-2.8-no-theme", "hotpe-2.8-shell-tools",
+                                   "hotpe-2.8-x86-driver-packages", "hotpe-2.8"}:
+                        name = f"{folder}/OmniAIPE{package.removeprefix('hotpe')}{tail}{member}"
+                path = safe_path(unpacked, name)
                 if entry.is_dir():
                     path.mkdir(parents=True, exist_ok=True)
                 else:

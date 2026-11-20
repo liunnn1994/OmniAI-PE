@@ -25,7 +25,7 @@ HOTPE_EXCLUSIONS = {
 }
 X86_DRIVER_PATH = "Windows/System32/DriverStore/FileRepository"
 X86_DRIVERS = ("ntprint.inf_x86_ee71fa42a4ee4f00", "prnms003.inf_x86_d6fba059ec824b4a")
-HOTPE_PACKAGE_PREFIXES = ("packages/hotpe-2.8-no-theme/", "packages/hotpe-2.8-shell-tools/")
+HOTPE_PACKAGE_PREFIXES = ("packages/OmniAIPE-2.8-no-theme/", "packages/OmniAIPE-2.8-shell-tools/")
 
 
 def publish(source, target, verify):
@@ -106,7 +106,7 @@ def prepare_hotpe(inputs, project, lock, hotpe_iso, work):
 
     sources_by_path = [(record, pe.safe_path(raw, record["target"])) for record in sources]
     sources_by_path.extend((record, pe.safe_path(raw, X86_DRIVER_PATH)) for record in project["packages"]
-                           if record["source"] == "packages/hotpe-2.8-x86-driver-packages")
+                           if record["source"] == "packages/OmniAIPE-2.8-x86-driver-packages")
     unresolved = []
     for record, source in sources_by_path:
         target = pe.safe_path(inputs, record["source"])

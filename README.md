@@ -27,14 +27,14 @@ GenOffice 的开始菜单入口传入 `--disable-direct-composition`，只影响
 | 内容 | ISO 内位置 | 工程内入口 |
 | --- | --- | --- |
 | BIOS 和 UEFI | El Torito 目录、`Boot/`、`EFI/` | `inputs/boot/` 中的启动镜像和 `inputs/media/` 中的启动文件 |
-| 原版 Win11 x64 PE 10.0.26100.5067 | `HotPE/Boot.wim`，映像与启动索引均为 1 | `project.json` 用微软 WinPE 10.0.26100.9974 替换该 WIM |
+| 原版 Win11 x64 PE 10.0.26100.5067 | `HotPE/Boot.wim`，映像与启动索引均为 1 | 成品使用 `OmniAIPE/Boot.wim`，底座为微软 WinPE 10.0.26100.9974 |
 | 预装软件 | `HotProgMods/*.HPM` | `packages` 和 `media_remove` |
-| 浏览器和远程协助 | `Apps/` | `packages` 和 `src/media/HotPE/HotPE.INI` |
-| 外置网卡驱动 | `HotPE/Data/Drives/` | `media` 作用域 |
-| 媒体配置 | `HotPE/HotPE.INI`、`HotPE/confi.ini`、`ventoy.dat` | `src/media/` |
+| 浏览器和远程协助 | `Apps/` | `packages` 和 `src/media/OmniAIPE/OmniAIPE.INI` |
+| 外置网卡驱动 | `HotPE/Data/Drives/` | 成品路径为 `OmniAIPE/Data/Drives/` |
+| 媒体配置 | `HotPE/HotPE.INI`、`HotPE/confi.ini`、`ventoy.dat` | `src/media/`，其中 `OmniAIPE.INI` 使用带 BOM 的 UTF-8 |
 | PE 启动、工具菜单和模块加载 | WIM 内 `Windows/Pecmd.ini`、`Program Files/PETools.ini`、`Program Files/HPM/*.WCS` | `src/wim/boot/1/` |
 
-两个 BCD 存储都引用 `\HotPE\Boot.wim` 和 `\Boot\boot.sdi`。构建时根据 `project.json` 的 `boot_descriptions` 更新媒体副本中的启动项名称。UEFI 预启动菜单实测会把中文显示成方框，因此菜单使用 ASCII 名称。进入 PE 后，项目的启动提示使用中文。原版 PECMD 配置会加载 `PETools.ini`，由它调用 HPM 脚本，扫描 `HotProgMods` 等模块目录。更改 WIM 或目录名称前需要同步处理这些引用。原版文件体积与哈希见 [上游锁](manifests/upstream.lock.json)。
+构建时将 BIOS 和 UEFI 启动项的 `device`、`osdevice` 指向 `\OmniAIPE\Boot.wim`，并按 `boot_descriptions` 更新菜单名称。UEFI 预启动菜单使用 ASCII，进入 PE 后的启动提示使用中文。HPM 工具继续使用其内置的 `HotProgMods` 目录。原版路径与文件哈希见 [上游锁](manifests/upstream.lock.json)。
 
 `mise run init` 从微软 ADK 10.1.28000.3481 提取并校验 x64 无按键提示的 UEFI 光盘引导镜像。该版 ADK 的 x64 `etfsboot.com` 与仓库的 BIOS 引导镜像字节相同。ISO 装配从已校验的 WinPE WIM 提取两种固件对应的 Windows 启动管理器及配套资源。
 

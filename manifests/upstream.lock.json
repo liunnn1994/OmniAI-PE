@@ -15,6 +15,10 @@
       "sha256": "ccfb7c3d668e408625d54efcb87d2806649d5efeb1252ecdcf5fdce6a8872c73"
     }
   },
+  "bcd_ramdisk_options": {
+    "bios": "{7619dcc8-fafe-11d9-b411-000476eba25f}",
+    "uefi": "{ae5534e0-a924-466c-b836-758539a3ee3a}"
+  },
   "media": {
     "AUTORUN.INF": {
       "size": 25,

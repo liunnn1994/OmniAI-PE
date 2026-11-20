@@ -90,6 +90,26 @@ class BundleTest(unittest.TestCase):
                 pe.fetch_inputs(inputs, "project.json", bundle)
             self.assertEqual(list(root.iterdir()), [bundle])
 
+    def test_fetch_renames_legacy_media_and_package_paths(self):
+        names = {
+            "media/HotPE/HotPE.INI": "media/OmniAIPE/OmniAIPE.INI",
+            "media/HotPE/Data/Drives/Network.7z": "media/OmniAIPE/Data/Drives/Network.7z",
+            "media/HotPE.ico": "media/OmniAIPE.ico",
+            "packages/hotpe-2.8-no-theme/tool.exe": "packages/OmniAIPE-2.8-no-theme/tool.exe",
+            "registry/hotpe-2.8/SYSTEM": "registry/OmniAIPE-2.8/SYSTEM",
+        }
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            bundle = root / "inputs.zip"
+            with ZipFile(bundle, "w") as archive:
+                for name in names:
+                    archive.writestr(name, name)
+            inputs = root / "inputs"
+            with patch.object(pe, "load_plan"):
+                pe.fetch_inputs(inputs, "project.json", bundle)
+            for old, new in names.items():
+                self.assertEqual((inputs / new).read_text(encoding="ascii"), old)
+
 
 class PathsTest(unittest.TestCase):
     def test_setup_paths_relocate_only_installed_folders_on_the_pe_drive(self):
@@ -143,7 +163,7 @@ class PathsTest(unittest.TestCase):
         recipe = pe.read_json(baseline["wims"]["boot"]["replacement"]["recipe"])
         cases = [
             ("media_remove", ["HotProgMods", "hotprogmods/a.hpm"], "Overlapping"),
-            ("media_remove", ["HotPE"], "Reserved"),
+            ("media_remove", ["OmniAIPE"], "Reserved"),
             ("wim_remove", {"boot": ["2/a"]}, "Unknown WIM index"),
             ("wim_remove", {"boot": ["1/Windows/System32/ntoskrnl.exe"]}, "Reserved"),
         ]
@@ -173,6 +193,9 @@ class OverlayTest(unittest.TestCase):
             applied = []
             defaults_applied = []
             display_applied = []
+            devices_applied = []
+            ramdisks = {kind: rf"ramdisk=[boot]\OmniAIPE\Boot.wim,{options}"
+                        for kind, options in pe.read_json("upstream.lock.json")["bcd_ramdisk_options"].items()}
 
             def edit(command, store_option, path, set_option, entry, element=None, name=None):
                 if set_option == "/default":
@@ -185,9 +208,12 @@ class OverlayTest(unittest.TestCase):
                     self.assertEqual(entry, default)
                     display_applied.append((element, name))
                     return
+                kind = next(kind for kind, store in stores.items() if store.name == path.name)
+                if element in {"device", "osdevice"}:
+                    devices_applied.append((kind, entry, element, name))
+                    return
                 self.assertEqual((command, store_option, set_option, element),
                                  ("bcdedit.exe", "/store", "/set", "description"))
-                kind = next(kind for kind, store in stores.items() if store.name == path.name)
                 self.assertEqual(path.parent.parent, media.parent)
                 path.with_suffix(".LOG1").touch()
                 with path.open("ab") as handle:
@@ -195,8 +221,12 @@ class OverlayTest(unittest.TestCase):
                 applied.append((kind, entry, name))
 
             with patch.object(pe, "run", side_effect=edit):
-                pe.apply_boot_descriptions(media, descriptions, default, prefer_1080p=project["uefi_prefer_1080p"])
+                pe.apply_boot_descriptions(media, descriptions, default,
+                                           prefer_1080p=project["uefi_prefer_1080p"], ramdisks=ramdisks)
             self.assertEqual(applied, expected)
+            self.assertEqual(devices_applied, [(kind, entry, element, ramdisks[kind])
+                                               for kind, entry, _ in expected
+                                               for element in ("device", "osdevice")])
             self.assertEqual(display_applied, [("highestmode", "off"), ("loadoptions", "OMNIAI_DISPLAY_1080P")])
             self.assertEqual(defaults_applied, [default])
             self.assertEqual({path for path in media.rglob("*") if path.is_file()}, set(stores.values()))

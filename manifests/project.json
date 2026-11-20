@@ -2,6 +2,11 @@
   "version": "0.3.33",
   "volume_label": "OMNIAI_PE",
   "media_source": "media",
+  "media_renames": {
+    "HotPE": "OmniAIPE",
+    "HotPE.INI": "OmniAIPE.INI",
+    "HotPE.ico": "OmniAIPE.ico"
+  },
   "uefi_boot": {
     "adk_version": "10.1.28000.3481",
     "source": "boot/efisys-adk-10.1.28000.3481-amd64.bin",
@@ -27,7 +32,7 @@
   "uefi_prefer_1080p": true,
   "wims": {
     "boot": {
-      "path": "HotPE/Boot.wim",
+      "path": "OmniAIPE/Boot.wim",
       "image_count": 1,
       "boot_index": 1,
       "replacement": {
@@ -38,6 +43,7 @@
         "configs": {
           "1": [
             "Program Files/HPM/HPM.WCS",
+            "Program Files/Drives/Network.WCS",
             "Program Files/PETools.ini",
             "Windows/System32/OmniAI-Devices.ps1",
             "Windows/System32/OmniAI-Start.cmd",
@@ -177,7 +183,7 @@
             },
             "registry": {
               "SYSTEM": {
-                "source": "registry/hotpe-2.8/SYSTEM",
+                "source": "registry/OmniAIPE-2.8/SYSTEM",
                 "sha256": "585a0b2ea60a3e06070732205b102a97e487f272886abb470db023ea0e2690ef",
                 "keys": [
                   "Services/bthenum",
@@ -345,139 +351,139 @@
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-no-theme/Program Files/7-Zip/7z.exe",
+      "source": "packages/OmniAIPE-2.8-no-theme/Program Files/7-Zip/7z.exe",
       "target": "Program Files/7-Zip/7z.exe",
       "sha256": "4cd7d776c686427226a151789d2d61f0b2ed2c392148cc4e69c0238362fafecf"
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-no-theme/Program Files/7-Zip/7z.dll",
+      "source": "packages/OmniAIPE-2.8-no-theme/Program Files/7-Zip/7z.dll",
       "target": "Program Files/7-Zip/7z.dll",
       "sha256": "ff699d7f8ca10f4c6f1a0c707f261aaf7b51b7e0ee838b43faafe887910a6589"
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-x86-driver-packages",
+      "source": "packages/OmniAIPE-2.8-x86-driver-packages",
       "target": "Program Files/OmniAI x86 Driver Packages",
       "sha256": "504a254ef9ab7633289683362d716f56d3f7d0b97a7a4fda1e1935d557c13494"
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-no-theme/Program Files/Drives",
+      "source": "packages/OmniAIPE-2.8-no-theme/Program Files/Drives",
       "target": "Program Files/Drives",
       "sha256": "a2ca701d48920481555f521d17e37f7cb95a3a7254135122214f5e23fa34a2b6"
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-no-theme/Program Files/Edgeless",
+      "source": "packages/OmniAIPE-2.8-no-theme/Program Files/Edgeless",
       "target": "Program Files/Edgeless",
       "sha256": "2c7febc9800a46016eeff796c162bcf6b5f4896501ea4409c150f7addb251bc1"
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-no-theme/Program Files/HotSysSetup",
+      "source": "packages/OmniAIPE-2.8-no-theme/Program Files/HotSysSetup",
       "target": "Program Files/HotSysSetup",
       "sha256": "0d5d36085b68e0c0b67836c7b3a6c2110e83f69f9f887b44bf78f713bb0189c7"
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-no-theme/Program Files/HPM",
+      "source": "packages/OmniAIPE-2.8-no-theme/Program Files/HPM",
       "target": "Program Files/HPM",
       "sha256": "504c18023244390027218eb26a5143e2c2e0465c6c65b901f37790b11f38a425"
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-no-theme/Program Files/Icons",
+      "source": "packages/OmniAIPE-2.8-no-theme/Program Files/Icons",
       "target": "Program Files/Icons",
       "sha256": "143389a247ebc42e2ef8ca467b527fe12f2dffa712857952b8d6fa7c2ef42d53"
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-no-theme/Program Files/PETools",
+      "source": "packages/OmniAIPE-2.8-no-theme/Program Files/PETools",
       "target": "Program Files/PETools",
       "sha256": "bb8b994f104e285674a8f13f55b3325e158b27f318a07992a4621355db67eb0a"
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-no-theme/Program Files/RDTools",
+      "source": "packages/OmniAIPE-2.8-no-theme/Program Files/RDTools",
       "target": "Program Files/RDTools",
       "sha256": "4be5b45e4f538798ae1033adcfd31ba18be5fbb6f3a832fdd3f6034c4f231191"
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-no-theme/Program Files/SogouInput",
+      "source": "packages/OmniAIPE-2.8-no-theme/Program Files/SogouInput",
       "target": "Program Files/SogouInput",
       "sha256": "122e60ae8115cd6a1c1d44dc9818a5cb22cbffa6db7d5f779802ae07d52f31ea"
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-no-theme/Program Files/WinXShell",
+      "source": "packages/OmniAIPE-2.8-no-theme/Program Files/WinXShell",
       "target": "Program Files/WinXShell",
       "sha256": "b937d4a0810ad0640133e391e76f5d63a5368cca0495a8f4f1e2416f22b23aa6"
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-no-theme/Windows/About.exe",
+      "source": "packages/OmniAIPE-2.8-no-theme/Windows/About.exe",
       "target": "Windows/About.exe",
       "sha256": "718573538f417a1437f8f84a508ed44c89a70959cd66b928f5002972c7e9476f"
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-no-theme/Windows/System32/Pecmd.exe",
+      "source": "packages/OmniAIPE-2.8-no-theme/Windows/System32/Pecmd.exe",
       "target": "Windows/System32/Pecmd.exe",
       "sha256": "d818dfe1adb10cf04439fcf59d3faac4f11461042e327efe418036749fb332ab"
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-shell-tools/Program Files/StartAllBack",
+      "source": "packages/OmniAIPE-2.8-shell-tools/Program Files/StartAllBack",
       "target": "Program Files/StartAllBack",
       "sha256": "5cda4a3f3f4eab14c2413ddaf6bede2df0ee7c7081cf223b9c86dc49d913f906"
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-shell-tools/Windows/SysWOW64/mspaint.exe",
+      "source": "packages/OmniAIPE-2.8-shell-tools/Windows/SysWOW64/mspaint.exe",
       "target": "Windows/SysWOW64/mspaint.exe",
       "sha256": "fdb5a84bf619cfdb6bbf6c88d657724574ec67393afad56443f0c173bf1afef5"
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-shell-tools/Windows/SysWOW64/zh-CN/mspaint.exe.mui",
+      "source": "packages/OmniAIPE-2.8-shell-tools/Windows/SysWOW64/zh-CN/mspaint.exe.mui",
       "target": "Windows/SysWOW64/zh-CN/mspaint.exe.mui",
       "sha256": "a8810d804ceff36a8fef429586131c2fe6150fc3ea08f9849db9279d760af886"
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-shell-tools/Windows/System32/calc.exe",
+      "source": "packages/OmniAIPE-2.8-shell-tools/Windows/System32/calc.exe",
       "target": "Windows/System32/calc.exe",
       "sha256": "c6a91cba00bf87cdb064c49adaac82255cbec6fdd48fd21f9b3b96abf019916b"
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-shell-tools/Windows/System32/mspaint.exe",
+      "source": "packages/OmniAIPE-2.8-shell-tools/Windows/System32/mspaint.exe",
       "target": "Windows/System32/mspaint.exe",
       "sha256": "fdb5a84bf619cfdb6bbf6c88d657724574ec67393afad56443f0c173bf1afef5"
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-shell-tools/Windows/System32/zh-CN/calc.exe.mui",
+      "source": "packages/OmniAIPE-2.8-shell-tools/Windows/System32/zh-CN/calc.exe.mui",
       "target": "Windows/System32/zh-CN/calc.exe.mui",
       "sha256": "3987f35610fecd773e42746811e6c4b022e9fe6442478a98c330edcd7d59a5d2"
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-shell-tools/Windows/System32/zh-CN/mspaint.exe.mui",
+      "source": "packages/OmniAIPE-2.8-shell-tools/Windows/System32/zh-CN/mspaint.exe.mui",
       "target": "Windows/System32/zh-CN/mspaint.exe.mui",
       "sha256": "a8810d804ceff36a8fef429586131c2fe6150fc3ea08f9849db9279d760af886"
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-shell-tools/Windows/SystemResources/mspaint.exe.mun",
+      "source": "packages/OmniAIPE-2.8-shell-tools/Windows/SystemResources/mspaint.exe.mun",
       "target": "Windows/SystemResources/mspaint.exe.mun",
       "sha256": "717e1378945bd09c89b1b1503c01ced9b09670192bd4b8f2c04e28d0326db6af"
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-shell-tools/Windows/System32/drivers/mtpHelper.sys",
+      "source": "packages/OmniAIPE-2.8-shell-tools/Windows/System32/drivers/mtpHelper.sys",
       "target": "Windows/System32/drivers/mtpHelper.sys",
       "sha256": "8f8790c0775c81195c2feda1ab18bfa53aa6f6bf28ef6597f4ab18575fe60f20"
     },
@@ -610,7 +616,7 @@
   ],
   "media_remove": [
     "AUTORUN.INF",
-    "HotPE.ico",
+    "OmniAIPE.ico",
     "HotProgMods/Browser_VirtualHotBar_C86_[PreInstall].HPM"
   ],
   "wim_remove": {}

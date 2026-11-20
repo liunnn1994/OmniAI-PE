@@ -26,7 +26,7 @@ if exist "%SystemRoot%\explorer.exe" (
     reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" /v Shell /t REG_SZ /d explorer.exe /f >nul
 )
 for %%D in (C D E F G H I J K L M N O P Q R S T U V W Y Z) do (
-    if exist "%%D:\HotPE\HotPE.INI" "%SystemRoot%\System32\Pecmd.exe" LOAD "%%D:\HotPE\HotPE.INI"
+    if exist "%%D:\OmniAIPE\OmniAIPE.INI" "%SystemRoot%\System32\Pecmd.exe" LOAD "%%D:\OmniAIPE\OmniAIPE.INI"
 )
 "%SystemRoot%\System32\Pecmd.exe" LOAD "%ProgramFiles%\PETools.ini"
 powershell -NoProfile -Command "if (-not (Get-Process -Name explorer -ErrorAction SilentlyContinue)) { exit 1 }"
