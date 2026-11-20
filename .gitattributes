@@ -1,6 +1,8 @@
-/src/** -text
-*.py text eol=lf
-*.json text eol=lf
-*.yml text eol=lf
-*.md text eol=lf
-/inputs/** filter=lfs diff=lfs merge=lfs -text
+* text=auto eol=lf
+
+# cmd.exe needs CRLF for these UTF-8 scripts with Chinese text.
+/src/media/Apps/UURemote/Start.cmd -text !eol whitespace=cr-at-eol
+/src/wim/boot/1/.replacement/Windows/System32/startnet.cmd -text !eol whitespace=cr-at-eol
+
+# Pinned build inputs must retain their original bytes.
+/inputs/** filter=lfs diff=lfs merge=lfs -text !eol

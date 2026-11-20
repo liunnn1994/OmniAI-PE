@@ -1,5 +1,6 @@
 @echo off
 setlocal
+for /f "tokens=2 delims=:" %%P in ('chcp') do set "startup_cp=%%P"
 set "install=%SystemDrive%\OmniAI\UURemote"
 set "bin=%install%\GameViewer\bin"
 set "ready=%install%\.ready"
@@ -10,7 +11,9 @@ if errorlevel 1 (
     goto failed
 )
 if exist "%ready%" if exist "%bin%\GameViewer.exe" goto prepared
-echo ÕýÔÚ×¼±¸ UU Ô¶³Ì£¬ÇëÉÔºò¡­¡­
+chcp 65001 >nul
+echo æ­£åœ¨å‡†å¤‡ UU è¿œç¨‹ï¼Œè¯·ç¨å€™â€¦â€¦
+if defined startup_cp chcp %startup_cp% >nul
 start "" /wait "%~dp0UUSetup.exe" /S /D=%install%
 if errorlevel 1 goto install_failed
 if not exist "%bin%\GameViewer.exe" goto install_failed
@@ -24,6 +27,8 @@ exit /b %errorlevel%
 :install_failed
 rd "%install%.lock" 2>nul
 :failed
-echo UU Ô¶³ÌÆô¶¯Ê§°Ü¡£Çë¼ì²é PE ÄÚ´æÅÌÊ£Óà¿Õ¼ä¡£
+chcp 65001 >nul
+echo UU è¿œç¨‹å¯åŠ¨å¤±è´¥ã€‚è¯·æ£€æŸ¥ PE å†…å­˜ç›˜å‰©ä½™ç©ºé—´ã€‚
+if defined startup_cp chcp %startup_cp% >nul
 pause
 exit /b 1

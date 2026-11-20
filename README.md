@@ -87,7 +87,10 @@ mise run hash 'runtimes/MyRuntime'
 | 加入便携运行时 | 把已准备好的 x64 文件目录放进 `inputs/runtimes/`，为 `boot/1` 添加一项，例如把 `runtimes/MyRuntime` 放到 `Program Files/MyRuntime`。从应用或启动脚本引用实际路径。只由某个程序使用的运行时也可随该 HPM 打包。 |
 | 移除 WIM 内容 | 在 `wim_remove.boot` 加入 `1/<WIM 内路径>`。如删除某个软件目录，检查并更新 `PETools.ini` 里的入口。 |
 
-编辑 `src/` 文件时保留其原始编码、BOM 和换行。装配只写回新增或改过的配置，并在复制软件包之后应用这些改动。需要注册表、服务或系统组件的运行时要另行处理其安装条件，目录复制仅负责把准备好的文件放到目标路径。
+项目文本使用 UTF-8 和 LF，已有 UTF-8 BOM 保留。含中文的 `startnet.cmd` 和 UU 远程 `Start.cmd` 使用 CRLF，以兼容 Windows `cmd.exe`。
+`inputs/` 是通过 Git LFS 管理的固定构建输入，保留原始字节以通过哈希校验。
+
+装配只写回新增或改过的配置，并在复制软件包之后应用这些改动。需要注册表、服务或系统组件的运行时要另行处理其安装条件，目录复制仅负责把准备好的文件放到目标路径。
 
 浏览器和远程协助包的版本记录在 `packages` 的源路径中。更新时从官方来源获取 Windows 包，更新固定资源和包的 SHA-256，并确认对应快捷方式在只读 ISO 上能启动。浏览器使用 Windows x64 稳定版，从 Firefox 完整安装包取 `core`，从 Chrome 企业版 MSI 取 `Chrome-bin`。UU 远程保留官方安装包，其余远程工具使用官方免安装 EXE。 [Firefox](https://www.firefox.com/en-US/releases/) · [Chrome](https://chromeenterprise.google/download/) · [网易 UU 远程](https://uuyc.163.com/download/) · [向日葵 SOS](https://sunlogin.oray.com/news/15493.html) · [RustDesk](https://github.com/rustdesk/rustdesk/releases)
 
