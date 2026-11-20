@@ -2,7 +2,7 @@
 python = "3.13.15"
 
 [tasks.init]
-description = "校验 Git 资源并下载制备微软 WinPE 底座"
+description = "校验 Git 资源并制备微软 WinPE 底座和 UEFI 引导镜像"
 run = "python scripts/prepare_upstream.py --kernel-only"
 
 [tasks.fetch-inputs]

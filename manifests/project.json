@@ -2,6 +2,27 @@
   "version": "0.3.25",
   "volume_label": "OMNIAI_PE",
   "media_source": "media",
+  "uefi_boot": {
+    "adk_version": "10.1.28000.3481",
+    "source": "boot/efisys-adk-10.1.28000.3481-amd64.bin",
+    "size": 1474560,
+    "sha256": "400187c3bde8ef8a281bc9d2798483b815c4039397b1ccdeb9e9b7796f4272e0",
+    "cabinet": {
+      "url": "https://download.microsoft.com/download/0dfa675f-bff6-4c31-bad9-86bc5b7db5ed/adk/Installers/bf7b6300431984daf850cc213043c7eb.cab",
+      "size": 2196362,
+      "sha256": "011c742517020fe5163b59f909f68a5a490df9ce4b57610eca16b9429d2a5867",
+      "member": "fil449d57a492af92416002a31c2676d95a"
+    }
+  },
+  "boot_descriptions": {
+    "bios": {
+      "{default}": "OmniAI PE (Legacy BIOS)"
+    },
+    "uefi": {
+      "{default}": "OmniAI PE (UEFI)",
+      "{3c19f227-82e7-4331-a7f1-fee53a899d60}": "OmniAI PE (UEFI, 1024x768)"
+    }
+  },
   "wims": {
     "boot": {
       "path": "HotPE/Boot.wim",

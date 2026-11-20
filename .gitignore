@@ -1,5 +1,6 @@
 /inputs/*.iso
 /inputs/wims/
+/inputs/boot/efisys-adk-*.bin
 /inputs/updates/26100/checkpoint/
 /inputs/updates/26100/rollup/
 /.work/

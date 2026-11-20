@@ -5,10 +5,10 @@ EXEC =!setx PATH "%ProgramFiles%\HPM\"
 LINK %Desktop%\模块管理,%CurDir%\HPMMGR.exe
 
 //创建开始菜单所有程序快捷方式
-LINK %Programs%\HotProgMod\选择模块加载,%CurDir%\HPMLoad.WCS,,%CurDir%\HPMLoad.exe
-LINK %Programs%\HotProgMod\选择模块加载(以普通模式),%CurDir%\HPMLoad_Default.WCS,,%CurDir%\HPMLoad.exe
-LINK %Programs%\HotProgMod\清除默认模式,%CurDir%\HPMLoadClearDefaultMode.WCS,,%CurDir%\HPMLoad.exe
-LINK %Programs%\HotProgMod\模块管理,%CurDir%\HPMMGR.exe,,
+LINK %Programs%\HPM 模块\选择模块加载,%CurDir%\HPMLoad.WCS,,%CurDir%\HPMLoad.exe
+LINK %Programs%\HPM 模块\选择模块加载(以普通模式),%CurDir%\HPMLoad_Default.WCS,,%CurDir%\HPMLoad.exe
+LINK %Programs%\HPM 模块\清除默认模式,%CurDir%\HPMLoadClearDefaultMode.WCS,,%CurDir%\HPMLoad.exe
+LINK %Programs%\HPM 模块\模块管理,%CurDir%\HPMMGR.exe,,
 
 
 //以普通模式加载HPM包

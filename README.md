@@ -15,7 +15,9 @@ OmniAI PE 是基于 HotPE V2.8.251018 的 Windows PE 装配工程。仓库维护
 | 媒体配置 | `HotPE/HotPE.INI`、`HotPE/confi.ini`、`ventoy.dat` | `src/media/` |
 | PE 启动、工具菜单和模块加载 | WIM 内 `Windows/Pecmd.ini`、`Program Files/PETools.ini`、`Program Files/HPM/*.WCS` | `src/wim/boot/1/` |
 
-两个 BCD 存储都引用 `\HotPE\Boot.wim` 和 `\Boot\boot.sdi`。原版 PECMD 配置会加载 `PETools.ini`，由它调用 HPM 脚本，扫描 `HotProgMods` 等模块目录。更改 WIM 或目录名称前需要同步处理这些引用。原版文件体积与哈希见 [上游锁](manifests/upstream.lock.json)。
+两个 BCD 存储都引用 `\HotPE\Boot.wim` 和 `\Boot\boot.sdi`。构建时根据 `project.json` 的 `boot_descriptions` 更新媒体副本中的启动项名称。UEFI 预启动菜单实测会把中文显示成方框，因此菜单使用 ASCII 名称。进入 PE 后，项目的启动提示使用中文。原版 PECMD 配置会加载 `PETools.ini`，由它调用 HPM 脚本，扫描 `HotProgMods` 等模块目录。更改 WIM 或目录名称前需要同步处理这些引用。原版文件体积与哈希见 [上游锁](manifests/upstream.lock.json)。
+
+`mise run init` 从微软 ADK 10.1.28000.3481 提取并校验 x64 无按键提示的 UEFI 光盘引导镜像。该版 ADK 的 x64 `etfsboot.com` 与仓库的 BIOS 引导镜像字节相同。ISO 装配从已校验的 WinPE WIM 提取两种固件对应的 Windows 启动管理器及配套资源。
 
 ## 本机构建
 
@@ -33,7 +35,7 @@ mise run build
 - `init` 校验 Git 中的固定资源，按 [底座配方](manifests/base-setup-26100.9974.json) 读取微软安装介质的 `boot.wim` 区段、下载所需 MSU 并制备 WinPE。有本地微软安装介质时，可用 `mise run init -- --windows-iso <路径>` 复用。
 - `check` 还校验固定资源、两份启动镜像和已制备的底座。
 - `stage` 只装配到 `.work/stage/<version>/media/`，可直接查看拆开的媒体。每次装配都会校验解包出的原版文件，再应用清单。
-- `build` 从干净的装配目录生成 ISO 和 SHA-256，输出到 `dist/<version>/`，并校验生成的 ISO 仍包含原版两个启动镜像。
+- `build` 从干净的装配目录生成 ISO 和 SHA-256，输出到 `dist/<version>/`，并校验 ISO 内的原版 BIOS 引导镜像和锁定的微软 UEFI 引导镜像。
 
 用 `mise tasks ls` 查看所有任务，用 `mise run test` 运行装配脚本的单元测试。
 

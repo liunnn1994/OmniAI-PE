@@ -23,6 +23,7 @@ from zipfile import BadZipFile, ZIP_DEFLATED, ZipFile
 ROOT = Path(__file__).resolve().parents[1]
 SECTOR = 2048
 BOOT_PLATFORMS = {0: "bios", 0xEF: "uefi"}
+BCD_STORES = {"bios": "Boot/bcd", "uefi": "EFI/MICROSOFT/BOOT/BCD"}
 KERNEL = "Windows/System32/ntoskrnl.exe"
 KERNEL_VERSION = re.compile(r"10\.0\.[0-9]+\.[0-9]+")
 REGISTRY_HIVES = {"SYSTEM", "SOFTWARE", "DEFAULT"}
@@ -236,6 +237,26 @@ def load_plan(inputs, with_inputs, manifest="project.json", *, with_kernel=True)
     lock = read_json("upstream.lock.json")
     require(re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", project["version"]), "Version must be x.y.z")
     require(re.fullmatch("[A-Z0-9_]{1,32}", project["volume_label"]), "Invalid ISO volume label")
+    if uefi := project.get("uefi_boot"):
+        slot = project["wims"]["boot"]
+        require(slot["image_count"] == 1 and "replacement" in slot,
+                "UEFI media requires a single-image replacement boot WIM")
+        relative(uefi["source"])
+        cabinet = uefi["cabinet"]
+        require("/" not in relative(cabinet["member"]) and cabinet["url"].startswith("https://"),
+                "Invalid ADK cabinet input")
+        for record in (uefi, cabinet):
+            check_hash(record["sha256"])
+            require(isinstance(record["size"], int) and record["size"] > 0, "Invalid UEFI input size")
+        if with_inputs and with_kernel:
+            check_file(safe_path(inputs, uefi["source"]), uefi)
+    for kind, descriptions in project.get("boot_descriptions", {}).items():
+        require(kind in BCD_STORES and BCD_STORES[kind] in lock["media"],
+                f"未知的启动配置：{kind}")
+        for entry, description in descriptions.items():
+            require(re.fullmatch(r"\{(?:default|[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12})\}", entry)
+                    and isinstance(description, str) and description.strip() and "\0" not in description,
+                    f"无效的启动项名称：{kind}/{entry}")
     layouts = {name: {key: value for key, value in slot.items() if key != "replacement"}
                for name, slot in project["wims"].items()}
     require(layouts == lock["wims"], "WIM paths, image counts and boot indexes must match the lock")
@@ -837,6 +858,41 @@ def prepare_base(inputs, recipe, *, output_dir=None, stage=None):
     return digest
 
 
+def apply_boot_descriptions(media, descriptions):
+    for kind, entries in descriptions.items():
+        store = safe_path(media, BCD_STORES[kind])
+        # BCDEdit 会产生注册表日志，只将修改后的 BCD 放回媒体目录。
+        with tempfile.TemporaryDirectory(dir=media.parent) as directory:
+            editable = Path(directory) / store.name
+            shutil.copyfile(store, editable)
+            for entry, description in entries.items():
+                run("bcdedit.exe", "/store", editable, "/set", entry, "description", description)
+            shutil.copyfile(editable, store)
+
+
+def apply_windows_boot_media(stage, wim):
+    files = {
+        "bootmgr": "PCAT/bootmgr",
+        "Boot/zh-cn/bootmgr.exe.mui": "PCAT/zh-CN/bootmgr.exe.mui",
+        "bootmgr.efi": "EFI/bootmgr.efi",
+        "EFI/BOOT/bootx64.efi": "EFI/bootmgfw.efi",
+        "EFI/BOOT/zh-cn/bootx64.efi.mui": "EFI/zh-CN/bootmgfw.efi.mui",
+        "EFI/MICROSOFT/BOOT/zh-cn/bootmgr.efi.mui": "EFI/zh-CN/bootmgr.efi.mui",
+    }
+    for folder in ("Boot", "EFI/MICROSOFT/BOOT"):
+        for name in ("Resources/bootres.dll", "Resources/zh-CN/bootres.dll.mui",
+                     "Fonts/chs_boot.ttf", "Fonts/wgl4_boot.ttf", "Fonts/msyh_boot.ttf"):
+            files[f"{folder}/{name.lower()}"] = name
+    with tempfile.TemporaryDirectory(dir=stage) as directory:
+        sources = Path(directory)
+        run(tool("SEVENZIP", "7z.exe"), "x", "-spd", f"-o{sources}", wim,
+            *(f"Windows/Boot/{name}" for name in dict.fromkeys(files.values())))
+        for destination, name in files.items():
+            target = safe_path(stage / "media", destination)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(safe_path(sources, f"Windows/Boot/{name}"), target)
+
+
 def stage_media(project, lock, scopes, inputs):
     stage = safe_path(ROOT, f".work/stage/{project['version']}")
     stage.mkdir(parents=True)
@@ -857,7 +913,13 @@ def stage_media(project, lock, scopes, inputs):
         require(actual == lock["media"].keys(), "Extracted media file list differs from the upstream lock")
         for path, record in lock["media"].items():
             check_file(safe_path(media, path), record)
+    uefi = project.get("uefi_boot")
+    if uefi:
+        target = stage / "uefi.bin"
+        shutil.copyfile(safe_path(inputs, uefi["source"]), target)
+        check_file(target, uefi)
     apply_plan(media, scopes["media"], inputs)
+    apply_boot_descriptions(media, project.get("boot_descriptions", {}))
     for slug, slot in project["wims"].items():
         wim = safe_path(media, slot["path"])
         if "replacement" in slot:
@@ -865,6 +927,8 @@ def stage_media(project, lock, scopes, inputs):
             shutil.copyfile(source, wim)
             require(sha256(wim) == sha256(source),
                     f"Copied replacement WIM hash mismatch: {wim}")
+            if uefi and slug == "boot":
+                apply_windows_boot_media(stage, source)
         check_wim(wim, slot)
         plans = [scopes[f"{slug}/{index}"] for index in range(1, slot["image_count"] + 1)]
         service = stage / f"service-{slug}"
@@ -890,7 +954,10 @@ def build_iso(project, lock, stage, dist):
     boot = f"-bootdata:2#p0,e,b{stage / 'bios.bin'}#pEF,e,b{stage / 'uefi.bin'}"
     run(tool("OSCDIMG", "oscdimg.exe"), "-m", "-h", "-u2", "-udfver102",
         f"-l{project['volume_label']}", boot, stage / "media", pending)
-    boot_images(pending, lock["boot"])
+    expected_boot = dict(lock["boot"])
+    if uefi := project.get("uefi_boot"):
+        expected_boot["uefi"] = uefi
+    boot_images(pending, expected_boot)
     digest = sha256(pending)
     pending.rename(iso)
     (dist / f"{iso.name}.sha256").write_text(f"{digest}  {iso.name}\n", encoding="utf-8")

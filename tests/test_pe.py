@@ -157,6 +157,37 @@ class PathsTest(unittest.TestCase):
 
 
 class OverlayTest(unittest.TestCase):
+    def test_boot_descriptions_update_both_stores_without_shipping_registry_logs(self):
+        with TemporaryDirectory() as directory:
+            media = Path(directory) / "media"
+            stores = {kind: media / name for kind, name in pe.BCD_STORES.items()}
+            for store in stores.values():
+                store.parent.mkdir(parents=True)
+                store.write_bytes(b"original")
+
+            descriptions = pe.read_json("project.json")["boot_descriptions"]
+            expected = [(kind, entry, name) for kind, entries in descriptions.items()
+                        for entry, name in entries.items()]
+            applied = []
+
+            def edit(command, store_option, path, set_option, entry, element, name):
+                self.assertEqual((command, store_option, set_option, element),
+                                 ("bcdedit.exe", "/store", "/set", "description"))
+                kind = next(kind for kind, store in stores.items() if store.name == path.name)
+                self.assertEqual(path.parent.parent, media.parent)
+                path.with_suffix(".LOG1").touch()
+                with path.open("ab") as handle:
+                    handle.write(name.encode())
+                applied.append((kind, entry, name))
+
+            with patch.object(pe, "run", side_effect=edit):
+                pe.apply_boot_descriptions(media, descriptions)
+            self.assertEqual(applied, expected)
+            self.assertEqual({path for path in media.rglob("*") if path.is_file()}, set(stores.values()))
+            for kind, store in stores.items():
+                self.assertEqual(store.read_bytes(), b"original" + b"".join(
+                    name.encode() for name in descriptions[kind].values()))
+
     def test_windows_feature_files_preserve_base_files_and_reject_kernel(self):
         with TemporaryDirectory() as directory:
             work = Path(directory)
@@ -221,6 +252,49 @@ class OverlayTest(unittest.TestCase):
 
 
 class ImageTest(unittest.TestCase):
+    def test_boot_media_copies_bios_and_uefi_resources_without_replacing_bcd(self):
+        with TemporaryDirectory() as directory:
+            stage = Path(directory)
+            media = stage / "media"
+            for name in pe.BCD_STORES.values():
+                bcd = media / name
+                bcd.parent.mkdir(parents=True)
+                bcd.write_bytes(b"existing BCD")
+
+            def extract(*args):
+                output = Path(args[3][2:])
+                for filename in args[5:]:
+                    path = output / filename
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_text(filename, encoding="ascii")
+
+            with patch.object(pe, "tool", return_value="7z.exe"), patch.object(pe, "run", side_effect=extract):
+                pe.apply_windows_boot_media(stage, stage / "boot.wim")
+
+            self.assertEqual((media / "bootmgr").read_text(), "Windows/Boot/PCAT/bootmgr")
+            self.assertEqual((media / "bootmgr.efi").read_text(), "Windows/Boot/EFI/bootmgr.efi")
+            for name in pe.BCD_STORES.values():
+                self.assertEqual((media / name).read_bytes(), b"existing BCD")
+
+    def test_build_iso_checks_replacement_uefi_image_and_upstream_bios(self):
+        with TemporaryDirectory() as directory:
+            stage = Path(directory)
+            project = pe.read_json("project.json")
+            lock = pe.read_json("upstream.lock.json")
+            original_uefi = dict(lock["boot"]["uefi"])
+            pending = stage / "building.iso"
+
+            with (patch.object(pe, "tool", return_value="oscdimg.exe"),
+                  patch.object(pe, "run", side_effect=lambda *args: pending.write_bytes(b"iso")),
+                  patch.object(pe, "boot_images") as verify):
+                iso = pe.build_iso(project, lock, stage, stage)
+
+            verify.assert_called_once_with(pending, {
+                "bios": lock["boot"]["bios"], "uefi": project["uefi_boot"],
+            })
+            self.assertEqual(lock["boot"]["uefi"], original_uefi)
+            self.assertEqual(iso.read_bytes(), b"iso")
+
     def test_base_updates_commit_in_order_before_publishing(self):
         with TemporaryDirectory() as directory:
             root = Path(directory)
@@ -301,6 +375,7 @@ class ImageTest(unittest.TestCase):
         project = pe.read_json("project.json")
         lock = pe.read_json("upstream.lock.json")
         project["wims"]["boot"].pop("replacement")
+        project.pop("uefi_boot")
         project.pop("media_source", None)
         project["wim_remove"] = {}
         project["packages"] = []

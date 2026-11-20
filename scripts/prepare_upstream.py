@@ -51,6 +51,20 @@ def extract(archive, output, filenames):
     pe.run(pe.tool("SEVENZIP", "7z.exe"), "x", "-y", "-spd", "-scsUTF-8", f"-o{output}", archive, *filenames)
 
 
+def prepare_uefi_boot(inputs, entry, work):
+    target = pe.safe_path(inputs, entry["source"])
+    if target.exists():
+        pe.check_file(target, entry)
+        return
+    cabinet = entry["cabinet"]
+    archive = work / "oscdimg.cab"
+    pe.download_https(cabinet["url"], archive, "微软 ADK UEFI 引导镜像")
+    pe.check_file(archive, cabinet)
+    output = work / "oscdimg"
+    extract(archive, output, [cabinet["member"]])
+    publish(pe.safe_path(output, cabinet["member"]), target, lambda path: pe.check_file(path, entry))
+
+
 def prepare_hotpe(inputs, project, lock, hotpe_iso, work):
     iso = pe.safe_path(inputs, lock["iso"]["file"])
     if hotpe_iso is None and not iso.exists():
@@ -217,7 +231,7 @@ def main():
     parser.add_argument("--winpe-ocs", type=Path, help="微软 ADK 中 amd64/WinPE_OCs 目录")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--hotpe-only", action="store_true", help="只恢复可直接从 HotPE ISO 制备的输入")
-    mode.add_argument("--kernel-only", action="store_true", help="只下载并制备微软 WinPE 底座")
+    mode.add_argument("--kernel-only", action="store_true", help="只制备微软 WinPE 底座和 UEFI 引导镜像")
     args = parser.parse_args()
     if not args.hotpe_only and not args.kernel_only and args.winpe_ocs is None:
         args.winpe_ocs = Path(os.environ["ProgramFiles(x86)"]) / (
@@ -228,6 +242,9 @@ def main():
     lock = pe.read_json("upstream.lock.json")
     work_parent = pe.safe_path(pe.ROOT, ".work")
     work_parent.mkdir(exist_ok=True)
+    if not args.hotpe_only and (uefi := project.get("uefi_boot")):
+        with TemporaryDirectory(prefix="adk-", dir=work_parent) as directory:
+            prepare_uefi_boot(inputs, uefi, Path(directory))
     if args.kernel_only:
         project, _, _ = pe.load_plan(inputs, True, with_kernel=False)
         # DISM 提交失败时保留日志和挂载目录。
