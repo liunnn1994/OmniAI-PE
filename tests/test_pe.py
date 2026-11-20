@@ -165,12 +165,26 @@ class OverlayTest(unittest.TestCase):
                 store.parent.mkdir(parents=True)
                 store.write_bytes(b"original")
 
-            descriptions = pe.read_json("project.json")["boot_descriptions"]
+            project = pe.read_json("project.json")
+            descriptions = project["boot_descriptions"]
+            default = project["uefi_default_entry"]
             expected = [(kind, entry, name) for kind, entries in descriptions.items()
                         for entry, name in entries.items()]
             applied = []
+            defaults_applied = []
+            display_applied = []
 
-            def edit(command, store_option, path, set_option, entry, element, name):
+            def edit(command, store_option, path, set_option, entry, element=None, name=None):
+                if set_option == "/default":
+                    self.assertEqual(path.name, stores["uefi"].name)
+                    self.assertEqual(applied, expected)
+                    defaults_applied.append(entry)
+                    return
+                if element in {"highestmode", "loadoptions"}:
+                    self.assertEqual(path.name, stores["uefi"].name)
+                    self.assertEqual(entry, default)
+                    display_applied.append((element, name))
+                    return
                 self.assertEqual((command, store_option, set_option, element),
                                  ("bcdedit.exe", "/store", "/set", "description"))
                 kind = next(kind for kind, store in stores.items() if store.name == path.name)
@@ -181,8 +195,10 @@ class OverlayTest(unittest.TestCase):
                 applied.append((kind, entry, name))
 
             with patch.object(pe, "run", side_effect=edit):
-                pe.apply_boot_descriptions(media, descriptions)
+                pe.apply_boot_descriptions(media, descriptions, default, prefer_1080p=project["uefi_prefer_1080p"])
             self.assertEqual(applied, expected)
+            self.assertEqual(display_applied, [("highestmode", "off"), ("loadoptions", "OMNIAI_DISPLAY_1080P")])
+            self.assertEqual(defaults_applied, [default])
             self.assertEqual({path for path in media.rglob("*") if path.is_file()}, set(stores.values()))
             for kind, store in stores.items():
                 self.assertEqual(store.read_bytes(), b"original" + b"".join(
@@ -222,6 +238,29 @@ class OverlayTest(unittest.TestCase):
             marker["sha256"] = pe.package_hash(payload)
             with self.assertRaisesRegex(ValueError, "Reserved Windows feature file"):
                 pe.add_windows_files(image, plan, work / "inputs")
+
+    def test_archive_package_checks_extracted_files(self):
+        with TemporaryDirectory() as directory:
+            work = Path(directory)
+            archive = work / "tool.7z"
+            archive.write_bytes(b"archive input")
+            expected = work / "expected"
+            expected.mkdir()
+            (expected / "Tool.exe").write_bytes(b"expected content")
+            media = work / "media"
+            package = {"source": archive.name, "sha256": pe.sha256(archive),
+                       "unpacked_sha256": pe.package_hash(expected)}
+            plan = {"remove": [], "overlay": {}, "packages": {"Apps/Tool": package}}
+
+            def extract(_exe, _command, _yes, output, source):
+                self.assertEqual(source, archive)
+                target = Path(output.removeprefix("-o"))
+                target.mkdir()
+                (target / "Tool.exe").write_bytes(b"wrong content")
+
+            with patch.object(pe, "tool", return_value="7z.exe"), patch.object(pe, "run", side_effect=extract):
+                with self.assertRaisesRegex(ValueError, "Staged payload hash mismatch"):
+                    pe.apply_plan(media, plan, work)
 
     def test_replace_directory_then_apply_overlay_and_remove_file(self):
         with TemporaryDirectory() as directory:

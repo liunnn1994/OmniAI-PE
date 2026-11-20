@@ -1,5 +1,5 @@
 {
-  "version": "0.3.25",
+  "version": "0.3.33",
   "volume_label": "OMNIAI_PE",
   "media_source": "media",
   "uefi_boot": {
@@ -19,10 +19,12 @@
       "{default}": "OmniAI PE (Legacy BIOS)"
     },
     "uefi": {
-      "{default}": "OmniAI PE (UEFI)",
+      "{2b27e930-f7ab-11df-aeb8-c641fe7f0057}": "OmniAI PE (UEFI, 1920x1080 preferred)",
       "{3c19f227-82e7-4331-a7f1-fee53a899d60}": "OmniAI PE (UEFI, 1024x768)"
     }
   },
+  "uefi_default_entry": "{2b27e930-f7ab-11df-aeb8-c641fe7f0057}",
+  "uefi_prefer_1080p": true,
   "wims": {
     "boot": {
       "path": "HotPE/Boot.wim",
@@ -343,9 +345,15 @@
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-no-theme/Program Files/7-Zip",
-      "target": "Program Files/7-Zip",
-      "sha256": "96052706995aaaa035e1c778f37dc0be6660488c24f158bc86ae48a5cc193ff0"
+      "source": "packages/hotpe-2.8-no-theme/Program Files/7-Zip/7z.exe",
+      "target": "Program Files/7-Zip/7z.exe",
+      "sha256": "4cd7d776c686427226a151789d2d61f0b2ed2c392148cc4e69c0238362fafecf"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/hotpe-2.8-no-theme/Program Files/7-Zip/7z.dll",
+      "target": "Program Files/7-Zip/7z.dll",
+      "sha256": "ff699d7f8ca10f4c6f1a0c707f261aaf7b51b7e0ee838b43faafe887910a6589"
     },
     {
       "scope": "boot/1",
@@ -385,15 +393,9 @@
     },
     {
       "scope": "boot/1",
-      "source": "packages/hotpe-2.8-no-theme/Program Files/Imagine",
-      "target": "Program Files/Imagine",
-      "sha256": "c97cab9f2fe84109828bffbe97d2f300317b877c501d96a091ef5ca08bdc8852"
-    },
-    {
-      "scope": "boot/1",
       "source": "packages/hotpe-2.8-no-theme/Program Files/PETools",
       "target": "Program Files/PETools",
-      "sha256": "e3b54b22969e7f6c07d137e995903e3b5c3e76e2913104e5d7dad70e9ffc1d6d"
+      "sha256": "bb8b994f104e285674a8f13f55b3325e158b27f318a07992a4621355db67eb0a"
     },
     {
       "scope": "boot/1",
@@ -478,11 +480,138 @@
       "source": "packages/hotpe-2.8-shell-tools/Windows/System32/drivers/mtpHelper.sys",
       "target": "Windows/System32/drivers/mtpHelper.sys",
       "sha256": "8f8790c0775c81195c2feda1ab18bfa53aa6f6bf28ef6597f4ab18575fe60f20"
+    },
+    {
+      "scope": "media",
+      "source": "packages/firefox-160.0.1",
+      "target": "Apps/Firefox",
+      "sha256": "41dc7d127620b3980ad145f62e74a9e6a28dfa1ef8b3b3377ecef50dc1bc04cf"
+    },
+    {
+      "scope": "media",
+      "source": "packages/chrome-158.0.8127.37",
+      "target": "Apps/Chrome",
+      "sha256": "5d6afdf7ec8d6504e2010e12c302f26c322400a0337eac81d6bc02254f02840a"
+    },
+    {
+      "scope": "media",
+      "source": "packages/uuremote-4.48.1.5606.exe",
+      "target": "Apps/UURemote/UUSetup.exe",
+      "sha256": "44d256737c33ec8ea49c8e0115223dd3a7a94b0cdd760bbaefccba4ea55af4c1"
+    },
+    {
+      "scope": "media",
+      "source": "packages/sunlogin-sos-1.2.1.61234",
+      "target": "Apps/Sunlogin",
+      "sha256": "9cfe72510cc33090c6f95739e9d90764f3399c2ac668575c3e2e50da325564db"
+    },
+    {
+      "scope": "media",
+      "source": "packages/rustdesk-1.5.3-x86-sciter",
+      "target": "Apps/RustDesk",
+      "sha256": "ea7deec5279b772b573f719d0f7ed1064902ef017989c273eb2c2fa1efd9107e"
+    },
+    {
+      "scope": "media",
+      "source": "packages/imageglass-10.0.6.906",
+      "target": "Apps/ImageGlass",
+      "sha256": "12b0dde13bf0181e85db5682c0515209e692acfde55d0c6b98e784045b8027cd"
+    },
+    {
+      "scope": "media",
+      "source": "packages/genoffice-0.13.615.7z",
+      "target": "Apps/GenOffice",
+      "sha256": "19d8a40b360b517aa611e80e5310e4093351922311f6990218cef0c3368f2229",
+      "unpacked_sha256": "57f01bfcdebe09aa7906ff8f2a24d3a603138dff83dad6cafed21c6267166bee"
+    },
+    {
+      "scope": "media",
+      "source": "packages/marktext-0.23.0.7z",
+      "target": "Apps/MarkText",
+      "sha256": "3ff33553b040dee86770c0b7e7644b583148433885b60ffbfac01c3b8ecd38a4",
+      "unpacked_sha256": "f7b4370191c5e4a0332eee0b6697b25b21593606841d9d9eb393d270cd88e5e2"
+    },
+    {
+      "scope": "media",
+      "source": "packages/opencode-1.19.6-baseline",
+      "target": "Apps/OpenCode",
+      "sha256": "9520aeb6db4a1dc6f0d334492c3261799f08615d390b4de17a1827e73e479e9a"
+    },
+    {
+      "scope": "media",
+      "source": "packages/360-superkiller-winpe64",
+      "target": "Apps/360FirstAid",
+      "sha256": "0ed05c0c40612bc5099e4eb1af95db1bb5d4722b87628bc8224eccddb40a7fec"
+    },
+    {
+      "scope": "media",
+      "source": "packages/workbuddy-5.11.3.43806934.7z",
+      "target": "Apps/WorkBuddy",
+      "sha256": "d3a72cd40ebc8856dabbc57b602c1018ab8f01bba8edfc122d352810cbfa49a3",
+      "unpacked_sha256": "70435ecd4b3cba9f1508bebabb629923cad8e58f7bf52218524be3e2b8c87001"
+    },
+    {
+      "scope": "media",
+      "source": "packages/deepseek-harness-0.2.2-rc.5.7z",
+      "target": "Apps/DeepSeekHarness",
+      "sha256": "a94b856690ae02196b369ad658aa8c10dfc5bbb6f48de70a2acfe9a0f0cfbdbd",
+      "unpacked_sha256": "e4f4c86813a163eee76d054f0a345c12343e5c64996fb7d3b1662d605b987a92"
+    },
+    {
+      "scope": "media",
+      "source": "packages/nanazip-7.0.1882.0-x64",
+      "target": "Apps/NanaZip",
+      "sha256": "be936d082faa46bf713367f19377f2f679b40b45a4e129e79f046b296e54a78f"
+    },
+    {
+      "scope": "media",
+      "source": "packages/doubao-2.35.12-online.exe",
+      "target": "Apps/Doubao/DoubaoSetup.exe",
+      "sha256": "36bf40c1bae1670adb41a2764e9386e6eae5b4c6d99344026a388bc670cbfefd"
+    },
+    {
+      "scope": "media",
+      "source": "packages/zed-1.29.2-x64",
+      "target": "Apps/Zed",
+      "sha256": "fb97f0e71d9f697766cace673b05d221d33ac4ac9f3250c519adc5218df81108"
+    },
+    {
+      "scope": "media",
+      "source": "packages/PowerShell-7.7.0-win-x64.zip",
+      "target": "Apps/PowerShell",
+      "sha256": "7c74e03b20a75b59715847439d046a6214b1863ee79b187872980f139bb4a05f",
+      "unpacked_sha256": "95067d930127eda99f7b3d37b7fffbe7e405d7a860ac8e0004e4bf7dde5319bc"
+    },
+    {
+      "scope": "media",
+      "source": "packages/localsend-1.18.2-x64",
+      "target": "Apps/LocalSend",
+      "sha256": "125ffda934a9e40e439cb39bc13a121f3d90bc1877ad251a7b86cf2ae61008f1"
+    },
+    {
+      "scope": "media",
+      "source": "packages/localsend-cli-1.18.2-x64.exe",
+      "target": "Apps/LocalSendCLI/LocalSendCLI.exe",
+      "sha256": "ca0b267e7457324b3664a935de4e4956da701a7fa1045f6f99c72602f7f8dc38"
+    },
+    {
+      "scope": "media",
+      "source": "packages/PixPin_win_3.6.6.0.zip",
+      "target": "Apps/PixPin/Portable",
+      "sha256": "cc49fbdd8e8d2cd98aeba5e749f2f9828517ecd06d201ca5ce1d4e2efd9ecc8e",
+      "unpacked_sha256": "2876e8638197e34c82e95250262b8186d34d4da5f421fb0492a6cc8826b18f58"
+    },
+    {
+      "scope": "media",
+      "source": "packages/pixpin-winpe/MFReadWrite.dll",
+      "target": "Apps/PixPin/MFReadWrite.dll",
+      "sha256": "b8295795734e17552fe0b9383426ed2543227d5155a2e8f3ff621a544e3cba4d"
     }
   ],
   "media_remove": [
     "AUTORUN.INF",
-    "HotPE.ico"
+    "HotPE.ico",
+    "HotProgMods/Browser_VirtualHotBar_C86_[PreInstall].HPM"
   ],
   "wim_remove": {}
 }

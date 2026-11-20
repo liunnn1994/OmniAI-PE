@@ -4,6 +4,24 @@ OmniAI PE 是基于 HotPE V2.8.251018 的 Windows PE 装配工程。仓库维护
 
 当前默认构建去掉 HotPE 的启动展示窗口、壁纸、主题切换、开始菜单与任务栏透明效果，以及光盘自定义图标。保留开始菜单和任务栏的功能入口、工具快捷方式、HPM 与 Edgeless 加载配置和驱动配置。
 
+UEFI 默认入口优先使用 1920×1080，并关闭强制使用固件最高分辨率。PE 启动后会请求 1920×1080。基本显示驱动无法切换 UEFI 模式时，继续使用固件提供的分辨率。启动菜单仍提供固定 1024×768 的入口。
+
+当前 Microsoft WinPE 底座包含 `dwm.exe`，但桌面会话未运行 DWM。在 VirtualBox 中，仅补入原版 HotPE 的 `dwminit.dll` 或同源 Windows 26100.9974 底座中的初始化 DLL，都会触发交互式登录初始化失败。因此发布镜像继续排除该 DLL。
+
+默认镜像用 Firefox 和 Google Chrome 替换 HotPE 自带的 C86 浏览器，入口位于开始菜单的「网络浏览」。网易 UU 远程、向日葵 SOS 和 RustDesk 位于「远程协助」。这些程序随 ISO 放在 `Apps/`，由用户从菜单手动启动。UU 远程首次运行时会通过随附安装包部署到当前 PE 会话的内存盘。向日葵 SOS 用于接受远程协助。
+
+RustDesk 使用官方同版本的 x86 Sciter 构建。
+
+开始菜单的「文件工具」提供 NanaZip、ImageGlass 和 LocalSend，「文档工具」提供 GenOffice 和 MarkText，「AI 工具」提供 WorkBuddy、OpenCode、DeepSeek Harness 和豆包。豆包默认打开官方网页版，镜像也附带官方桌面版在线安装程序。「系统维护」提供 360 系统急救箱 WinPE 专版。
+
+开始菜单「PE 工具 → PixPin 截图」启动 PixPin 3.6.6.0 官方便携版。启动后按 `Ctrl+1` 框选，按 `Ctrl+C` 复制或按 `Ctrl+S` 保存。启动入口将程序复制到当前 WinPE 会话的用户目录，并补齐 Media Foundation 读取组件和 Network List Manager 的 COM 注册。
+
+LocalSend 1.18.2 提供官方 Windows x64 图形版和命令行版。图形版省略 ZIP 中的 `settings.json`，应用把设置写入当前 PE 会话的用户目录。同一 VirtualBox 配置下，原版 HotPE 的图形版成功接收测试文件，当前底座的图形版接收时可能退出。命令行版也可接收，收到请求后按 `Y`，文件保存在当前 PE 用户的 Downloads 目录。两个版本使用同一端口，请分别启动。
+
+GenOffice 的开始菜单入口传入 `--disable-direct-composition`，只影响本次应用启动。更新 GenOffice 时可沿用该入口，并复测新版能否显示 DOCX 正文。在 VirtualBox 的 WinPE 测试中，桌面版可显示测试 DOCX 正文，随附的 `Apps/GenOffice/resources/cli/genoffice.cmd` 也可读取 DOCX。
+
+开始菜单的「开发工具」提供 Zed 1.29.2 和 PowerShell 7.7.0。VirtualBox 的 WinPE 测试中，Zed 能打开文本文件，PowerShell 7 能执行本地脚本。
+
 ## 原版布局
 
 | 内容 | ISO 内位置 | 工程内入口 |
@@ -11,6 +29,7 @@ OmniAI PE 是基于 HotPE V2.8.251018 的 Windows PE 装配工程。仓库维护
 | BIOS 和 UEFI | El Torito 目录、`Boot/`、`EFI/` | `inputs/boot/` 中的启动镜像和 `inputs/media/` 中的启动文件 |
 | 原版 Win11 x64 PE 10.0.26100.5067 | `HotPE/Boot.wim`，映像与启动索引均为 1 | `project.json` 用微软 WinPE 10.0.26100.9974 替换该 WIM |
 | 预装软件 | `HotProgMods/*.HPM` | `packages` 和 `media_remove` |
+| 浏览器和远程协助 | `Apps/` | `packages` 和 `src/media/HotPE/HotPE.INI` |
 | 外置网卡驱动 | `HotPE/Data/Drives/` | `media` 作用域 |
 | 媒体配置 | `HotPE/HotPE.INI`、`HotPE/confi.ini`、`ventoy.dat` | `src/media/` |
 | PE 启动、工具菜单和模块加载 | WIM 内 `Windows/Pecmd.ini`、`Program Files/PETools.ini`、`Program Files/HPM/*.WCS` | `src/wim/boot/1/` |
@@ -47,11 +66,13 @@ mise run build
 
 构建使用微软安装介质中的 Windows PE 索引，以保留微软预装的音频组件。底座来源、哈希和更新步骤见 [底座配方](manifests/base-setup-26100.9974.json) 和 [装配架构](ARCHITECTURE.md)。
 
-启动时会把随附的 `7z.exe` 和 `7z.dll` 复制到 `%SystemRoot%\System32`，以兼容使用原版绝对路径的脚本。
+启动时会把随附的 `7z.exe` 和 `7z.dll` 复制到 `%SystemRoot%\System32`，供 Edgeless 等使用旧路径的模块加载脚本调用。开始菜单和文件关联中的旧 7-Zip 图形入口已移除。
 
 ## 增减软件和运行时
 
 编辑 [项目配置](manifests/project.json)。`packages` 每项有 `scope`、`source`、`target` 和 `sha256`。源路径相对于 `inputs/`，目标路径相对于指定作用域的根。作用域 `media` 是 ISO 根，`boot/1` 是 Boot.wim 索引 1 的根。使用同一个入口生成文件或目录的哈希。
+
+大型应用可保留官方发布的 `.zip` 或安装包内的 `.7z` 归档。媒体包配置 `unpacked_sha256` 后，装配会校验归档并展开到 `target`，再校验解包目录的哈希。应用从 ISO 直接启动。
 
 ```powershell
 mise run hash 'packages/MyTool_[PreInstall].HPM'
@@ -67,6 +88,8 @@ mise run hash 'runtimes/MyRuntime'
 | 移除 WIM 内容 | 在 `wim_remove.boot` 加入 `1/<WIM 内路径>`。如删除某个软件目录，检查并更新 `PETools.ini` 里的入口。 |
 
 编辑 `src/` 文件时保留其原始编码、BOM 和换行。装配只写回新增或改过的配置，并在复制软件包之后应用这些改动。需要注册表、服务或系统组件的运行时要另行处理其安装条件，目录复制仅负责把准备好的文件放到目标路径。
+
+浏览器和远程协助包的版本记录在 `packages` 的源路径中。更新时从官方来源获取 Windows 包，更新固定资源和包的 SHA-256，并确认对应快捷方式在只读 ISO 上能启动。浏览器使用 Windows x64 稳定版，从 Firefox 完整安装包取 `core`，从 Chrome 企业版 MSI 取 `Chrome-bin`。UU 远程保留官方安装包，其余远程工具使用官方免安装 EXE。 [Firefox](https://www.firefox.com/en-US/releases/) · [Chrome](https://chromeenterprise.google/download/) · [网易 UU 远程](https://uuyc.163.com/download/) · [向日葵 SOS](https://sunlogin.oray.com/news/15493.html) · [RustDesk](https://github.com/rustdesk/rustdesk/releases)
 
 HotPE 的模块制作、加载行为和授权范围可查阅官方文档。Windows 与随附软件分别遵循各自的授权条款。 [制作 HPM 包](https://docs.hotpe.top/devdoc/makehpm.html) · [模块加载](https://docs.hotpe.top/devdoc/shifthpm.html) · [HotPE 开放授权](https://docs.hotpe.top/cooperation/permit.html)
 

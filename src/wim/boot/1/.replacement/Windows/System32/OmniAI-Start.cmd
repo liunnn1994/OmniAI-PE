@@ -7,6 +7,11 @@ if not exist "%USERPROFILE%\Desktop\" md "%USERPROFILE%\Desktop"
 if not exist "%APPDATA%\Microsoft\Windows\Start Menu\Programs\" md "%APPDATA%\Microsoft\Windows\Start Menu\Programs"
 
 "%SystemRoot%\System32\Pecmd.exe" LOAD "%SystemRoot%\OmniAI-Devices.ini"
+reg query "HKLM\SYSTEM\CurrentControlSet\Control" /v SystemStartOptions | findstr /i /c:"OMNIAI_DISPLAY_1080P" >nul
+if not errorlevel 1 (
+    "%SystemRoot%\System32\Pecmd.exe" DISP W1920 H1080 B32
+    "%SystemRoot%\System32\Pecmd.exe" LOAD "%ProgramFiles%\PETools\AutoDPI.WCS"
+)
 "%ProgramFiles%\PETools\vtoydump.exe" -m
 for %%F in (7z.exe 7z.dll) do (
     if exist "%ProgramFiles%\7-Zip\%%F" if not exist "%SystemRoot%\System32\%%F" (

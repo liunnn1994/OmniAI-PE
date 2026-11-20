@@ -257,6 +257,15 @@ def load_plan(inputs, with_inputs, manifest="project.json", *, with_kernel=True)
             require(re.fullmatch(r"\{(?:default|[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12})\}", entry)
                     and isinstance(description, str) and description.strip() and "\0" not in description,
                     f"无效的启动项名称：{kind}/{entry}")
+    if "uefi_default_entry" in project:
+        entry = project["uefi_default_entry"]
+        require(isinstance(entry, str) and entry != "{default}"
+                and entry in project.get("boot_descriptions", {}).get("uefi", {}),
+                "UEFI 默认启动项必须引用 boot_descriptions 中的启动项 GUID")
+    if "uefi_prefer_1080p" in project:
+        require(isinstance(project["uefi_prefer_1080p"], bool)
+                and (not project["uefi_prefer_1080p"] or "uefi_default_entry" in project),
+                "UEFI 1080p 首选项需要指定默认启动项")
     layouts = {name: {key: value for key, value in slot.items() if key != "replacement"}
                for name, slot in project["wims"].items()}
     require(layouts == lock["wims"], "WIM paths, image counts and boot indexes must match the lock")
@@ -400,8 +409,14 @@ def load_plan(inputs, with_inputs, manifest="project.json", *, with_kernel=True)
         plan = scopes[scope]
         require(target not in plan["packages"], f"Duplicate package target: {scope}/{target}")
         source = relative(package["source"])
+        if "unpacked_sha256" in package:
+            check_hash(package["unpacked_sha256"])
+            require(scope == "media" and source.lower().endswith((".7z", ".zip")),
+                    f"Expected a media package sourced from a .7z or .zip archive: {source}")
         if with_inputs:
             payload = safe_path(inputs, source)
+            if "unpacked_sha256" in package:
+                require(payload.is_file(), f"Missing archive payload: {payload}")
             require(package_hash(payload) == package["sha256"], f"Payload hash mismatch: {payload}")
         plan["packages"][target] = package
     for scope, plan in scopes.items():
@@ -438,14 +453,21 @@ def apply_plan(root, plan, inputs):
     for name, package in plan["packages"].items():
         target = safe_path(root, name)
         source = safe_path(inputs, package["source"])
+        unpacked_digest = package.get("unpacked_sha256")
+        if unpacked_digest:
+            require(source.is_file() and sha256(source) == package["sha256"],
+                    f"Archive payload hash mismatch: {source}")
         if target.exists():
             remove(target)
         target.parent.mkdir(parents=True, exist_ok=True)
-        if source.is_dir():
+        if unpacked_digest:
+            run(tool("SEVENZIP", "7z.exe"), "x", "-y", f"-o{target}", source)
+        elif source.is_dir():
             shutil.copytree(source, target)
         else:
             shutil.copy2(source, target)
-        require(package_hash(target) == package["sha256"], f"Copied payload hash mismatch: {target}")
+        digest = unpacked_digest or package["sha256"]
+        require(package_hash(target) == digest, f"Staged payload hash mismatch: {target}")
     for name, source in plan["overlay"].items():
         target = safe_path(root, name)
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -858,7 +880,7 @@ def prepare_base(inputs, recipe, *, output_dir=None, stage=None):
     return digest
 
 
-def apply_boot_descriptions(media, descriptions):
+def apply_boot_descriptions(media, descriptions, uefi_default=None, *, prefer_1080p=False):
     for kind, entries in descriptions.items():
         store = safe_path(media, BCD_STORES[kind])
         # BCDEdit 会产生注册表日志，只将修改后的 BCD 放回媒体目录。
@@ -867,6 +889,12 @@ def apply_boot_descriptions(media, descriptions):
             shutil.copyfile(store, editable)
             for entry, description in entries.items():
                 run("bcdedit.exe", "/store", editable, "/set", entry, "description", description)
+            if kind == "uefi" and uefi_default is not None:
+                if prefer_1080p:
+                    # BCDEdit 的 graphicsresolution 不接受 1080p。保留固件模式并在 PE 内请求 1080p。
+                    run("bcdedit.exe", "/store", editable, "/set", uefi_default, "highestmode", "off")
+                    run("bcdedit.exe", "/store", editable, "/set", uefi_default, "loadoptions", "OMNIAI_DISPLAY_1080P")
+                run("bcdedit.exe", "/store", editable, "/default", uefi_default)
             shutil.copyfile(editable, store)
 
 
@@ -919,7 +947,8 @@ def stage_media(project, lock, scopes, inputs):
         shutil.copyfile(safe_path(inputs, uefi["source"]), target)
         check_file(target, uefi)
     apply_plan(media, scopes["media"], inputs)
-    apply_boot_descriptions(media, project.get("boot_descriptions", {}))
+    apply_boot_descriptions(media, project.get("boot_descriptions", {}), project.get("uefi_default_entry"),
+                            prefer_1080p=project.get("uefi_prefer_1080p", False))
     for slug, slot in project["wims"].items():
         wim = safe_path(media, slot["path"])
         if "replacement" in slot:
