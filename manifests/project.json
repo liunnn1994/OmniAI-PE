@@ -46,6 +46,7 @@
             "Program Files/Drives/Network.WCS",
             "Program Files/PETools.ini",
             "Windows/System32/OmniAI-Devices.ps1",
+            "Windows/System32/OmniAI-HideStartup.ps1",
             "Windows/System32/OmniAI-Start.cmd",
             "Windows/System32/startnet.cmd",
             "Windows/OmniAI-Devices.ini",

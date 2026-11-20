@@ -14,3 +14,6 @@ echo 正在启动桌面和工具……
 call "%SystemRoot%\System32\OmniAI-Start.cmd"
 echo OmniAI PE 启动完成。
 if defined startup_cp chcp %startup_cp% >nul
+
+rem Keep the WinPE shell process alive and hide its console.
+powershell -NoProfile -ExecutionPolicy RemoteSigned -File "%SystemRoot%\System32\OmniAI-HideStartup.ps1"
