@@ -14,13 +14,15 @@ RustDesk 使用官方同版本的 x86 Sciter 构建。
 
 开始菜单的「文件工具」提供 NanaZip、ImageGlass 和 LocalSend，「文档工具」提供 GenOffice 和 MarkText，「AI 工具」提供 WorkBuddy、OpenCode、DeepSeek Harness 和豆包。豆包默认打开官方网页版，镜像也附带官方桌面版在线安装程序。「系统维护」提供 360 系统急救箱 WinPE 专版。
 
+桌面和开始菜单的「图吧工具箱」使用图吧工具箱 CE 1.9.1 的 TUI 兼容版，可从只读 ISO 浏览并启动内置工具。DiskGenius 6.2.0.1829 x64 和 WizTree 4.34 从这个入口打开。CPU-Z、AIDA64、Everything、BlueScreenView、BOOTICE、HD Tune Pro、UltraISO、鼠标测试和键盘测试也通过图吧工具箱启动。 [上游发布包和对应源码](https://github.com/luolangaga/tubatools/releases/tag/v1.9.1)
+
 开始菜单「PE 工具 → PixPin 截图」启动 PixPin 3.6.6.0 官方便携版。启动后按 `Ctrl+1` 框选，按 `Ctrl+C` 复制或按 `Ctrl+S` 保存。启动入口将程序复制到当前 WinPE 会话的用户目录，并补齐 Media Foundation 读取组件和 Network List Manager 的 COM 注册。
 
 LocalSend 1.18.2 提供官方 Windows x64 图形版和命令行版。图形版省略 ZIP 中的 `settings.json`，应用把设置写入当前 PE 会话的用户目录。同一 VirtualBox 配置下，原版 HotPE 的图形版成功接收测试文件，当前底座的图形版接收时可能退出。命令行版也可接收，收到请求后按 `Y`，文件保存在当前 PE 用户的 Downloads 目录。两个版本使用同一端口，请分别启动。
 
 GenOffice 的开始菜单入口传入 `--disable-direct-composition`，只影响本次应用启动。更新 GenOffice 时可沿用该入口，并复测新版能否显示 DOCX 正文。在 VirtualBox 的 WinPE 测试中，桌面版可显示测试 DOCX 正文，随附的 `Apps/GenOffice/resources/cli/genoffice.cmd` 也可读取 DOCX。
 
-开始菜单的「开发工具」提供 Zed 1.29.2 和 PowerShell 7.7.0。VirtualBox 的 WinPE 测试中，Zed 能打开文本文件，PowerShell 7 能执行本地脚本。
+开始菜单的「开发工具」提供 Zed 1.29.3 和 PowerShell 7.7.0。Zed 的启动入口为当前进程关闭 DirectComposition，使编辑器在 WinPE 中显示正文。
 
 ## 原版布局
 
@@ -66,7 +68,7 @@ mise run build
 
 构建使用微软安装介质中的 Windows PE 索引，以保留微软预装的音频组件。底座来源、哈希和更新步骤见 [底座配方](manifests/base-setup-26100.9974.json) 和 [装配架构](ARCHITECTURE.md)。
 
-启动时会把随附的 `7z.exe` 和 `7z.dll` 复制到 `%SystemRoot%\System32`，供 Edgeless 等使用旧路径的模块加载脚本调用。开始菜单和文件关联中的旧 7-Zip 图形入口已移除。
+启动时会把随附的 7-Zip 26.06 的 `7z.exe` 和 `7z.dll` 复制到 `%SystemRoot%\System32`，供 Edgeless 等使用旧路径的模块加载脚本调用。开始菜单和文件关联中的旧 7-Zip 图形入口已移除。
 
 ## 增减软件和运行时
 

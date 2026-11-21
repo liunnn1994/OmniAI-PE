@@ -163,7 +163,7 @@ class PathsTest(unittest.TestCase):
         recipe = pe.read_json(baseline["wims"]["boot"]["replacement"]["recipe"])
         cases = [
             ("media_remove", ["HotProgMods", "hotprogmods/a.hpm"], "Overlapping"),
-            ("media_remove", ["OmniAIPE"], "Reserved"),
+            ("media_remove", [baseline["wims"]["boot"]["path"]], "Reserved"),
             ("wim_remove", {"boot": ["2/a"]}, "Unknown WIM index"),
             ("wim_remove", {"boot": ["1/Windows/System32/ntoskrnl.exe"]}, "Reserved"),
         ]
@@ -194,6 +194,7 @@ class OverlayTest(unittest.TestCase):
             defaults_applied = []
             display_applied = []
             devices_applied = []
+            osdevices_applied = []
             ramdisks = {kind: rf"ramdisk=[boot]\OmniAIPE\Boot.wim,{options}"
                         for kind, options in pe.read_json("upstream.lock.json")["bcd_ramdisk_options"].items()}
 
@@ -209,7 +210,7 @@ class OverlayTest(unittest.TestCase):
                     display_applied.append((element, name))
                     return
                 kind = next(kind for kind, store in stores.items() if store.name == path.name)
-                if element in {"device", "osdevice"}:
+                if element == "device":
                     devices_applied.append((kind, entry, element, name))
                     return
                 self.assertEqual((command, store_option, set_option, element),
@@ -220,13 +221,18 @@ class OverlayTest(unittest.TestCase):
                     handle.write(name.encode())
                 applied.append((kind, entry, name))
 
-            with patch.object(pe, "run", side_effect=edit):
+            def sync(path, entries):
+                kind = next(kind for kind, store in stores.items() if store.name == path.name)
+                osdevices_applied.append((kind, list(entries)))
+
+            with (patch.object(pe, "run", side_effect=edit),
+                  patch.object(pe, "sync_bcd_osdevices", side_effect=sync)):
                 pe.apply_boot_descriptions(media, descriptions, default,
                                            prefer_1080p=project["uefi_prefer_1080p"], ramdisks=ramdisks)
             self.assertEqual(applied, expected)
-            self.assertEqual(devices_applied, [(kind, entry, element, ramdisks[kind])
-                                               for kind, entry, _ in expected
-                                               for element in ("device", "osdevice")])
+            self.assertEqual(devices_applied, [(kind, entry, "device", ramdisks[kind])
+                                               for kind, entry, _ in expected])
+            self.assertEqual(osdevices_applied, [(kind, list(entries)) for kind, entries in descriptions.items()])
             self.assertEqual(display_applied, [("highestmode", "off"), ("loadoptions", "OMNIAI_DISPLAY_1080P")])
             self.assertEqual(defaults_applied, [default])
             self.assertEqual({path for path in media.rglob("*") if path.is_file()}, set(stores.values()))

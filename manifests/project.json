@@ -1,5 +1,5 @@
 {
-  "version": "0.3.33",
+  "version": "0.3.35",
   "volume_label": "OMNIAI_PE",
   "media_source": "media",
   "media_renames": {
@@ -179,8 +179,8 @@
               "sha256": "f3874cfce08d02f8b4ded954f7ae618dd6229cd6e17f88b1ced7953b4ce81fe0"
             },
             "drivers": {
-              "source": "packages/windows-setuppe-26100.9974-driver-delta",
-              "sha256": "fcf874dbf469e374fc9cb371509f9c7248038da705a14bb692084bb3806a9e60"
+              "source": "packages/winpe-26100.9974-drivers-modern-035",
+              "sha256": "d9e4392a395c1c7463f289fb02e34b3972a0fc4e3a70d0a5bd972d32136a87a7"
             },
             "registry": {
               "SYSTEM": {
@@ -352,15 +352,15 @@
     },
     {
       "scope": "boot/1",
-      "source": "packages/OmniAIPE-2.8-no-theme/Program Files/7-Zip/7z.exe",
+      "source": "packages/7zip-26.06-x64/7z.exe",
       "target": "Program Files/7-Zip/7z.exe",
-      "sha256": "4cd7d776c686427226a151789d2d61f0b2ed2c392148cc4e69c0238362fafecf"
+      "sha256": "dc0493429fe28136fcb177a0e77c9875cbb3b0bff5f2f8eeba4df302e98cef76"
     },
     {
       "scope": "boot/1",
-      "source": "packages/OmniAIPE-2.8-no-theme/Program Files/7-Zip/7z.dll",
+      "source": "packages/7zip-26.06-x64/7z.dll",
       "target": "Program Files/7-Zip/7z.dll",
-      "sha256": "ff699d7f8ca10f4c6f1a0c707f261aaf7b51b7e0ee838b43faafe887910a6589"
+      "sha256": "500db9eb17f3c21b729ba41dd02ecfe1823da05028c7e4ba129084cc74cc364e"
     },
     {
       "scope": "boot/1",
@@ -370,9 +370,9 @@
     },
     {
       "scope": "boot/1",
-      "source": "packages/OmniAIPE-2.8-no-theme/Program Files/Drives",
+      "source": "packages/hotpe-drives-current-035",
       "target": "Program Files/Drives",
-      "sha256": "a2ca701d48920481555f521d17e37f7cb95a3a7254135122214f5e23fa34a2b6"
+      "sha256": "5825bc82572273f90e3490e6c5afc06078b751c1146e839ac56db9e29ef3bdc4"
     },
     {
       "scope": "boot/1",
@@ -436,9 +436,9 @@
     },
     {
       "scope": "boot/1",
-      "source": "packages/OmniAIPE-2.8-shell-tools/Program Files/StartAllBack",
+      "source": "packages/startallback-3.9.28-x64",
       "target": "Program Files/StartAllBack",
-      "sha256": "5cda4a3f3f4eab14c2413ddaf6bede2df0ee7c7081cf223b9c86dc49d913f906"
+      "sha256": "5907ebf2390b61df4acc8666ca47160ddc13d2c4eac7ec9bbc7f8cdbc8e52c0f"
     },
     {
       "scope": "boot/1",
@@ -578,9 +578,9 @@
     },
     {
       "scope": "media",
-      "source": "packages/zed-1.29.2-x64",
+      "source": "packages/zed-1.29.3-x64",
       "target": "Apps/Zed",
-      "sha256": "fb97f0e71d9f697766cace673b05d221d33ac4ac9f3250c519adc5218df81108"
+      "sha256": "68de1656273a0158f0956377e1f1f76d3faa9d4ac5c6d3ed1bd83460d6a112fc"
     },
     {
       "scope": "media",
@@ -613,12 +613,44 @@
       "source": "packages/pixpin-winpe/MFReadWrite.dll",
       "target": "Apps/PixPin/MFReadWrite.dll",
       "sha256": "b8295795734e17552fe0b9383426ed2543227d5155a2e8f3ff621a544e3cba4d"
+    },
+    {
+      "scope": "media",
+      "source": "packages/MoreTools-0.3.35.HPM",
+      "target": "HotProgMods/MoreTools_VirtualHotBar_2.8_[PreInstall].HPM",
+      "sha256": "72db27106c4a9e6f5b0e652488c381a70633a71c451d612c274a59c22de420f8"
+    },
+    {
+      "scope": "media",
+      "source": "packages/WIT-25H2-0.3.34.HPM",
+      "target": "HotProgMods/WIT_VirtualHotBar_25H2_[PreInstall].HPM",
+      "sha256": "c834b108b1194b0cd884736246c29964e0d9c46c21f52ed228f65ef95a73c184"
+    },
+    {
+      "scope": "media",
+      "source": "packages/hotpe-network-current-035/Network.7z",
+      "target": "OmniAIPE/Data/Drives/Network.7z",
+      "sha256": "b4b3bb25e41ccbcbdcbb96498fd3c0283f280f1dc4beec02951759713195d3a1"
+    },
+    {
+      "scope": "media",
+      "source": "packages/hotpe-network-current-035/Network.index",
+      "target": "OmniAIPE/Data/Drives/Network.index",
+      "sha256": "0fb4b67f5b6f44b69087487767f398ed3596f3fb333cea208e6b4ed84650de88"
+    },
+    {
+      "scope": "media",
+      "target": "Apps/TubaTools",
+      "source": "packages/TubaTools-1.9.1-winpe-x64.7z",
+      "sha256": "3ce80589e5e543b35ba52ba9cc40a1d0099760045f1299082e60bba473d92efb",
+      "unpacked_sha256": "064178fa531364238d88f7a30e18cc3c47f7e24285b2b727ec786dad5d9ad3a6"
     }
   ],
   "media_remove": [
     "AUTORUN.INF",
     "OmniAIPE.ico",
-    "HotProgMods/Browser_VirtualHotBar_C86_[PreInstall].HPM"
+    "HotProgMods/Browser_VirtualHotBar_C86_[PreInstall].HPM",
+    "HotProgMods/DiskGenius_VirtualHotBar_6.0.1.1645_[PreInstall].HPM"
   ],
   "wim_remove": {}
 }

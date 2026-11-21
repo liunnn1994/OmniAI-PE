@@ -903,6 +903,22 @@ def prepare_base(inputs, recipe, *, output_dir=None, stage=None):
     return digest
 
 
+def sync_bcd_osdevices(store, entries):
+    import winreg
+
+    with offline_hive(store) as hive, offline_registry_writer() as write:
+        for entry in entries:
+            if entry == "{default}":
+                with winreg.OpenKey(hive, r"Objects\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\Elements\23000003") as key:
+                    entry, _ = winreg.QueryValueEx(key, "Element")
+            elements = rf"Objects\{entry}\Elements"
+            with (winreg.OpenKey(hive, elements + r"\11000001") as device,
+                  winreg.OpenKey(hive, elements + r"\21000001") as osdevice):
+                value, kind = winreg.QueryValueEx(device, "Element")
+                require(kind == winreg.REG_BINARY, f"Invalid BCD device element: {entry}")
+                write(osdevice, "Element", kind, value)
+
+
 def apply_boot_descriptions(media, descriptions, uefi_default=None, *, prefer_1080p=False, ramdisks=None):
     for kind, entries in descriptions.items():
         store = safe_path(media, BCD_STORES[kind])
@@ -913,8 +929,10 @@ def apply_boot_descriptions(media, descriptions, uefi_default=None, *, prefer_10
             for entry, description in entries.items():
                 run("bcdedit.exe", "/store", editable, "/set", entry, "description", description)
                 if ramdisks:
-                    for element in ("device", "osdevice"):
-                        run("bcdedit.exe", "/store", editable, "/set", entry, element, ramdisks[kind])
+                    run("bcdedit.exe", "/store", editable, "/set", entry, "device", ramdisks[kind])
+            if ramdisks:
+                # 复用 BCDEdit 写入的 ramdisk 数据，避免部分宿主机的 osdevice 命令失败。
+                sync_bcd_osdevices(editable, entries)
             if kind == "uefi" and uefi_default is not None:
                 if prefer_1080p:
                     # BCDEdit 的 graphicsresolution 不接受 1080p。保留固件模式并在 PE 内请求 1080p。

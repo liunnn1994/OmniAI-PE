@@ -60,6 +60,12 @@ mise run prepare-compat $hotpeWim $winpeWithPackages $windowsInstallWim windows-
 
 迁移使用两个 HotPE 自带的签名 Intel RST 版本和 Dell 发布的签名 RST 17.5.9.1040，覆盖 DISM 拒绝登记的两份原 RST INF 列出的 PCI 硬件 ID。驱动包目录的哈希由迁移清单锁定。 [Dell RST 下载和校验值](https://www.dell.com/support/home/en-us/drivers/driversdetails?driverid=cg84x)
 
+HotPE 的 SRS 驱动包为五个匹配的 Intel VMD 硬件 ID 使用 20.2.6.1025。Intel Core Ultra Series 3 的 VMD 21.1.0.1006 由 DISM 注入 WinPE。SRS 已移除旧版 19.x VMD 和仅供旧硬件使用的 20.2.4.1019 包。 [Intel RST 发布页](https://www.intel.com/content/www/us/en/download/920456/intel-rapid-storage-technology-driver-installation-software-for-intel-core-ultra-series-3-platforms.html)
+
+外置网络驱动包的 Intel 通用无线驱动使用 24.80.0 的两份签名驱动，已移除旧 Intel 通用无线包及其索引。Intel 通用有线驱动使用 31.3 的 Windows 11 x64 签名驱动，由 DISM 注入 WinPE。 [Intel Wi-Fi 发布说明](https://downloadmirror.intel.com/930341/ReleaseNotes_WiFi_24.80.0_IT.pdf) · [Intel 有线驱动](https://www.intel.com/content/www/us/en/download/727998/intel-network-adapter-driver-for-microsoft-windows-11.html?wapkw=i226)
+
+AMD RAID 使用官方 Windows 11 x64 预装驱动 9.3.3.00291，替换 SRS 包里的旧 AMD RAID 分支。Realtek RTL8127 从 Microsoft Update Catalog 注入 1127.31.50.603。 [AMD RAID 下载](https://www.amd.com/en/support/downloads/drivers.html/chipsets/str5/wrx90.html) · [Realtek 驱动目录](https://www.catalog.update.microsoft.com/ScopedViewInline.aspx?updateid=fb7bc5d7-4f5c-4118-8de1-ebe99fca6ec9)
+
 随完整 Windows 提供的部分驱动由系统组件目录签名。更新兼容包时，按驱动文件哈希查询签名目录，核对签名和 WinPE 已有目录，将缺少的微软签名目录放进迁移清单指定的私有目录包并更新目录哈希。启动脚本在 `wpeinit` 后登记这些目录，并重新启动报告 Code 52 的设备。迁移清单使用安装介质 WinPE 原有的 AudioCore、AudioDrivers、音频服务和访问权限。 [微软目录登记 API](https://learn.microsoft.com/en-us/windows/win32/api/mscat/nf-mscat-cryptcatadminaddcatalog)
 
 旧版程序的 WinMM 音频依赖由同版本微软安装映像提供。文件层保留原版所需的 `.drv` 和 `.acm` 文件，注册表层合并 64 位和 32 位 `Drivers32` 映射。验收用系统声音面板确认默认扬声器，并用 WinMM 播放 WAV。 [微软 WinMM 组件说明](https://learn.microsoft.com/en-us/windows-hardware/drivers/audio/user-mode-wdm-audio-components)
@@ -68,7 +74,7 @@ GitHub Actions 的手动触发和启用后的 push 构建使用 `project.json`�
 
 ## 迁移验收
 
-先完成装配和离线校验，再在 VirtualBox 中集中验证成品启动。迁移以原版非美化内容的保留、微软底座和驱动与系统依赖的纳入情况为验收范围。内置软件的逐项功能测试和缺陷修复另行安排。
+先完成装配和离线校验，再在 VMware Workstation 中集中验证成品启动。迁移以原版非美化内容的保留、微软底座和驱动与系统依赖的纳入情况为验收范围。内置软件的逐项功能测试和缺陷修复另行安排。
 
 | 验收范围 | 需要的证据 |
 | --- | --- |
