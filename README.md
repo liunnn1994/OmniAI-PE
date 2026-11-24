@@ -8,19 +8,21 @@ UEFI 默认入口优先使用 1920×1080，并关闭强制使用固件最高分�
 
 当前 Microsoft WinPE 底座包含 `dwm.exe`，但桌面会话未运行 DWM。在 VirtualBox 中，仅补入原版 HotPE 的 `dwminit.dll` 或同源 Windows 26100.9974 底座中的初始化 DLL，都会触发交互式登录初始化失败。因此发布镜像继续排除该 DLL。
 
-默认镜像用 Firefox 和 Google Chrome 替换 HotPE 自带的 C86 浏览器，入口位于开始菜单的「网络浏览」。网易 UU 远程、向日葵 SOS 和 RustDesk 位于「远程协助」。这些程序随 ISO 放在 `Apps/`，由用户从菜单手动启动。UU 远程首次运行时会通过随附安装包部署到当前 PE 会话的内存盘。向日葵 SOS 用于接受远程协助。
+默认镜像用 Firefox 和 Google Chrome 替换 HotPE 自带的 C86 浏览器，入口位于开始菜单的「网络浏览」。Chrome 在 WinPE 中以关闭 DirectComposition 的方式启动。网易 UU 远程、向日葵 SOS 和 RustDesk 位于「远程协助」。这些程序随 ISO 放在 `Apps/`，由用户从菜单手动启动。UU 远程首次运行时会通过随附安装包部署到当前 PE 会话的内存盘。向日葵 SOS 用于接受远程协助。
 
 RustDesk 使用官方同版本的 x86 Sciter 构建。
 
-开始菜单的「文件工具」提供 NanaZip、ImageGlass 和 LocalSend，「文档工具」提供 GenOffice 和 MarkText，「AI 工具」提供 WorkBuddy、OpenCode、DeepSeek Harness 和豆包。豆包默认打开官方网页版，镜像也附带官方桌面版在线安装程序。「系统维护」提供 360 系统急救箱 WinPE 专版。
+开始菜单的「文件工具」提供 NanaZip、ImageGlass 和 LocalSend，「文档工具」提供 GenOffice 和 MarkText，「AI 工具」提供 WorkBuddy、OpenCode、DeepSeek Harness 和豆包。「豆包」直接打开官方桌面客户端 2.35.12，程序文件来自同版本完整离线安装包。「豆包网页版」可单独打开。WorkBuddy 通过系统 `tar.exe` 解包自带的 Node.js，启动器将自带的 Git、Bash 和 Python 路径传给应用。「系统维护」提供 360 系统急救箱 WinPE 专版。 [豆包桌面客户端](https://www.doubao.com/download/desktop) [WorkBuddy](https://www.codebuddy.cn/work/)
 
-桌面和开始菜单的「图吧工具箱」使用图吧工具箱 CE 1.9.1 的 TUI 兼容版，可从只读 ISO 浏览并启动内置工具。DiskGenius 6.2.0.1829 x64 和 WizTree 4.34 从这个入口打开。CPU-Z、AIDA64、Everything、BlueScreenView、BOOTICE、HD Tune Pro、UltraISO、鼠标测试和键盘测试也通过图吧工具箱启动。 [上游发布包和对应源码](https://github.com/luolangaga/tubatools/releases/tag/v1.9.1)
+桌面和开始菜单的「图吧工具箱」启动官方 2026.08 图形版。图吧内附 DiskGenius 6.2.0.1829 x64，WizTree 4.34 位于「硬件检测」，BOOTICE 位于「系统维护」。 [图吧工具箱官方下载](https://www.tbtool.cn/download/index.html)
 
-开始菜单「PE 工具 → PixPin 截图」启动 PixPin 3.6.6.0 官方便携版。启动后按 `Ctrl+1` 框选，按 `Ctrl+C` 复制或按 `Ctrl+S` 保存。启动入口将程序复制到当前 WinPE 会话的用户目录，并补齐 Media Foundation 读取组件和 Network List Manager 的 COM 注册。
+开始菜单「PE 工具 → PixPin 截图」启动 PixPin 3.6.6.0 官方便携版。启动后按 `Ctrl+1` 框选，按 `Ctrl+C` 复制或按 `Ctrl+S` 保存。启动入口补齐 Network List Manager 的 COM 注册。Media Foundation 读取组件随 Boot.wim 安装，供 PixPin 和其他桌面程序使用。
+
+图吧工具箱、PixPin、GenOffice、MarkText、WorkBuddy、DeepSeek Harness、豆包和 PowerShell 7 以压缩包随 ISO 提供。首次点击其中一个入口时会提示选一个有足够空间的本地可写目录，并在其下创建 `OmniAI-PE-AppCache`，只展开当前应用。当前 PE 会话会记住选择。重启后选回同一个目录，即可复用通过校验的缓存。缓存文件有变化时，从 ISO 重新展开并保留原目录。首次解包和后续启动都可离线完成。浏览器、WizTree、BOOTICE 等工具可以直接启动。
 
 LocalSend 1.18.2 提供官方 Windows x64 图形版和命令行版。图形版省略 ZIP 中的 `settings.json`，应用把设置写入当前 PE 会话的用户目录。同一 VirtualBox 配置下，原版 HotPE 的图形版成功接收测试文件，当前底座的图形版接收时可能退出。命令行版也可接收，收到请求后按 `Y`，文件保存在当前 PE 用户的 Downloads 目录。两个版本使用同一端口，请分别启动。
 
-GenOffice 的开始菜单入口传入 `--disable-direct-composition`，只影响本次应用启动。更新 GenOffice 时可沿用该入口，并复测新版能否显示 DOCX 正文。在 VirtualBox 的 WinPE 测试中，桌面版可显示测试 DOCX 正文，随附的 `Apps/GenOffice/resources/cli/genoffice.cmd` 也可读取 DOCX。
+GenOffice 的开始菜单入口传入 `--disable-direct-composition`，只影响本次应用启动。更新 GenOffice 时可沿用该入口，并复测新版能否显示 DOCX 正文。在 VirtualBox 的 WinPE 测试中，桌面版可显示测试 DOCX 正文，应用目录内随附的 `resources/cli/genoffice.cmd` 也可读取 DOCX。
 
 开始菜单的「开发工具」提供 Zed 1.29.3 和 PowerShell 7.7.0。Zed 的启动入口为当前进程关闭 DirectComposition，使编辑器在 WinPE 中显示正文。
 
@@ -74,7 +76,7 @@ mise run build
 
 编辑 [项目配置](manifests/project.json)。`packages` 每项有 `scope`、`source`、`target` 和 `sha256`。源路径相对于 `inputs/`，目标路径相对于指定作用域的根。作用域 `media` 是 ISO 根，`boot/1` 是 Boot.wim 索引 1 的根。使用同一个入口生成文件或目录的哈希。
 
-大型应用可保留官方发布的 `.zip` 或安装包内的 `.7z` 归档。媒体包配置 `unpacked_sha256` 后，装配会校验归档并展开到 `target`，再校验解包目录的哈希。应用从 ISO 直接启动。
+媒体包可使用 `.zip` 或 `.7z` 归档。配置 `unpacked_sha256` 后，构建会校验归档及展开后的目录。附加 `launch.entry` 和可选的 `launch.arguments` 后，构建将归档和逐文件校验清单保存于 `AppPackages/`。开始菜单经由 `Apps/StartApp.cmd` 传入应用目录名，首次启动时按需解包。`launch.entry` 相对于 `Apps/<应用目录名>`，可指向应用的可执行文件或随覆盖文件提供的 CMD 启动器。
 
 ```powershell
 mise run hash 'packages/MyTool_[PreInstall].HPM'

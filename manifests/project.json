@@ -1,5 +1,5 @@
 {
-  "version": "0.3.35",
+  "version": "0.3.37",
   "volume_label": "OMNIAI_PE",
   "media_source": "media",
   "media_renames": {
@@ -529,14 +529,16 @@
       "source": "packages/genoffice-0.13.615.7z",
       "target": "Apps/GenOffice",
       "sha256": "19d8a40b360b517aa611e80e5310e4093351922311f6990218cef0c3368f2229",
-      "unpacked_sha256": "57f01bfcdebe09aa7906ff8f2a24d3a603138dff83dad6cafed21c6267166bee"
+      "unpacked_sha256": "57f01bfcdebe09aa7906ff8f2a24d3a603138dff83dad6cafed21c6267166bee",
+      "launch": { "entry": "GenOffice.exe", "arguments": "--disable-direct-composition" }
     },
     {
       "scope": "media",
       "source": "packages/marktext-0.23.0.7z",
       "target": "Apps/MarkText",
       "sha256": "3ff33553b040dee86770c0b7e7644b583148433885b60ffbfac01c3b8ecd38a4",
-      "unpacked_sha256": "f7b4370191c5e4a0332eee0b6697b25b21593606841d9d9eb393d270cd88e5e2"
+      "unpacked_sha256": "f7b4370191c5e4a0332eee0b6697b25b21593606841d9d9eb393d270cd88e5e2",
+      "launch": { "entry": "marktext.exe" }
     },
     {
       "scope": "media",
@@ -555,14 +557,16 @@
       "source": "packages/workbuddy-5.11.3.43806934.7z",
       "target": "Apps/WorkBuddy",
       "sha256": "d3a72cd40ebc8856dabbc57b602c1018ab8f01bba8edfc122d352810cbfa49a3",
-      "unpacked_sha256": "70435ecd4b3cba9f1508bebabb629923cad8e58f7bf52218524be3e2b8c87001"
+      "unpacked_sha256": "70435ecd4b3cba9f1508bebabb629923cad8e58f7bf52218524be3e2b8c87001",
+      "launch": { "entry": "Start.cmd" }
     },
     {
       "scope": "media",
       "source": "packages/deepseek-harness-0.2.2-rc.5.7z",
       "target": "Apps/DeepSeekHarness",
       "sha256": "a94b856690ae02196b369ad658aa8c10dfc5bbb6f48de70a2acfe9a0f0cfbdbd",
-      "unpacked_sha256": "e4f4c86813a163eee76d054f0a345c12343e5c64996fb7d3b1662d605b987a92"
+      "unpacked_sha256": "e4f4c86813a163eee76d054f0a345c12343e5c64996fb7d3b1662d605b987a92",
+      "launch": { "entry": "DeepSeek Harness.exe", "arguments": "--disable-gpu" }
     },
     {
       "scope": "media",
@@ -572,9 +576,11 @@
     },
     {
       "scope": "media",
-      "source": "packages/doubao-2.35.12-online.exe",
-      "target": "Apps/Doubao/DoubaoSetup.exe",
-      "sha256": "36bf40c1bae1670adb41a2764e9386e6eae5b4c6d99344026a388bc670cbfefd"
+      "source": "packages/doubao-2.35.12-desktop.7z",
+      "target": "Apps/Doubao",
+      "sha256": "d1f2da6a9920aebd484307c235ee205b5eb262e253cd90a79911080764a92c24",
+      "unpacked_sha256": "11a34477702c1f476f831baa6576840713384f8402c7d4ddbeb44a194a4e8829",
+      "launch": { "entry": "Doubao.exe", "arguments": "--disable-direct-composition" }
     },
     {
       "scope": "media",
@@ -587,7 +593,8 @@
       "source": "packages/PowerShell-7.7.0-win-x64.zip",
       "target": "Apps/PowerShell",
       "sha256": "7c74e03b20a75b59715847439d046a6214b1863ee79b187872980f139bb4a05f",
-      "unpacked_sha256": "95067d930127eda99f7b3d37b7fffbe7e405d7a860ac8e0004e4bf7dde5319bc"
+      "unpacked_sha256": "95067d930127eda99f7b3d37b7fffbe7e405d7a860ac8e0004e4bf7dde5319bc",
+      "launch": { "entry": "pwsh.exe", "arguments": "-NoLogo" }
     },
     {
       "scope": "media",
@@ -606,13 +613,32 @@
       "source": "packages/PixPin_win_3.6.6.0.zip",
       "target": "Apps/PixPin/Portable",
       "sha256": "cc49fbdd8e8d2cd98aeba5e749f2f9828517ecd06d201ca5ce1d4e2efd9ecc8e",
-      "unpacked_sha256": "2876e8638197e34c82e95250262b8186d34d4da5f421fb0492a6cc8826b18f58"
+      "unpacked_sha256": "2876e8638197e34c82e95250262b8186d34d4da5f421fb0492a6cc8826b18f58",
+      "launch": { "entry": "Start.cmd" }
     },
     {
-      "scope": "media",
+      "scope": "boot/1",
       "source": "packages/pixpin-winpe/MFReadWrite.dll",
-      "target": "Apps/PixPin/MFReadWrite.dll",
+      "target": "Windows/System32/MFReadWrite.dll",
       "sha256": "b8295795734e17552fe0b9383426ed2543227d5155a2e8f3ff621a544e3cba4d"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/windows-26100-app-runtime/tar.exe",
+      "target": "Windows/System32/tar.exe",
+      "sha256": "a3ac62fd4cdf619a7c53f71ca3fe5fb42f72020975670ff29afe3603f6416a8e"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/windows-26100-app-runtime/archiveint.dll",
+      "target": "Windows/System32/archiveint.dll",
+      "sha256": "7fd0e1da5579bf55c8395373459c4435928985bbf3423d34c7b1bcd7946c8ab1"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/windows-26100-app-runtime/ndfapi.dll",
+      "target": "Windows/System32/ndfapi.dll",
+      "sha256": "79ae198a14ad3270c244e30a5b8242d81dc5f0dba2f8efd861658fb9422910ed"
     },
     {
       "scope": "media",
@@ -641,9 +667,22 @@
     {
       "scope": "media",
       "target": "Apps/TubaTools",
-      "source": "packages/TubaTools-1.9.1-winpe-x64.7z",
-      "sha256": "3ce80589e5e543b35ba52ba9cc40a1d0099760045f1299082e60bba473d92efb",
-      "unpacked_sha256": "064178fa531364238d88f7a30e18cc3c47f7e24285b2b727ec786dad5d9ad3a6"
+      "source": "packages/tbtool-2026.08-desktop.7z",
+      "sha256": "266a5af392a4a66b6a6de5cccfa1794e22dba305276b30a694480c53cba03b79",
+      "unpacked_sha256": "82a403cf37978cc01e6514282088d682e36830c99a0531dd58f2650cf09ad731",
+      "launch": { "entry": "TubaTools.exe" }
+    },
+    {
+      "scope": "media",
+      "target": "Apps/WizTree",
+      "source": "packages/wiztree-4.34-x64",
+      "sha256": "18c97679cadecd974060bfecdde80b4acc9a74850925f5e360b1cc131f683a85"
+    },
+    {
+      "scope": "media",
+      "target": "Apps/BOOTICE/BOOTICE.exe",
+      "source": "packages/bootice-1.3.4.0-x64/BOOTICE.exe",
+      "sha256": "e1cb831ac9213b52066f934ba0fa80ea8a9de48932452d4142fa085a2ba24fc2"
     }
   ],
   "media_remove": [

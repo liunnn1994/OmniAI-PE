@@ -436,6 +436,17 @@ def load_plan(inputs, with_inputs, manifest="project.json", *, with_kernel=True)
             check_hash(package["unpacked_sha256"])
             require(scope == "media" and source.lower().endswith((".7z", ".zip")),
                     f"Expected a media package sourced from a .7z or .zip archive: {source}")
+        if "launch" in package:
+            launch = package["launch"]
+            parts = target.split("/")
+            require("unpacked_sha256" in package and len(parts) >= 2 and parts[0] == "Apps"
+                    and re.fullmatch(r"[A-Za-z0-9]+", parts[1]),
+                    f"Expected an archived media app: {target}")
+            require(isinstance(launch, dict) and "entry" in launch, f"Invalid application entry: {target}")
+            relative(launch["entry"])
+            require(Path(launch["entry"]).suffix.lower() in {".exe", ".cmd"}
+                    and isinstance(launch.get("arguments", ""), str),
+                    f"Invalid application entry: {target}")
         if with_inputs:
             payload = safe_path(inputs, source)
             if "unpacked_sha256" in package:
@@ -473,6 +484,7 @@ def apply_plan(root, plan, inputs):
 
     for name in plan["remove"]:
         remove(safe_path(root, name))
+    deferred = {}
     for name, package in plan["packages"].items():
         target = safe_path(root, name)
         source = safe_path(inputs, package["source"])
@@ -480,6 +492,11 @@ def apply_plan(root, plan, inputs):
         if unpacked_digest:
             require(source.is_file() and sha256(source) == package["sha256"],
                     f"Archive payload hash mismatch: {source}")
+        if package.get("launch"):
+            app = name.split("/")[1]
+            require(app.casefold() not in deferred, f"Duplicate deferred app: {app}")
+            deferred[app.casefold()] = (app, name, package, source)
+            continue
         if target.exists():
             remove(target)
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -495,6 +512,38 @@ def apply_plan(root, plan, inputs):
         target = safe_path(root, name)
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
+    if deferred:
+        prepare_app_archives(root, deferred.values())
+
+
+def prepare_app_archives(media, apps):
+    destination = safe_path(media, "AppPackages")
+    destination.mkdir()
+    for app, target, package, source in apps:
+        app_root = safe_path(media, f"Apps/{app}")
+        archive = f"{app}{source.suffix.lower()}"
+        with tempfile.TemporaryDirectory(prefix="omniai-app-") as directory:
+            root = Path(directory)
+            relative_target = "/".join(target.split("/")[2:])
+            unpacked = safe_path(root, relative_target) if relative_target else root
+            run(tool("SEVENZIP", "7z.exe"), "x", "-y", f"-o{unpacked}", source)
+            require(package_hash(unpacked) == package["unpacked_sha256"],
+                    f"Staged payload hash mismatch: {target}")
+            if app_root.is_dir():
+                shutil.copytree(app_root, root, dirs_exist_ok=True)
+            launch = package["launch"]
+            require(safe_path(root, launch["entry"]).is_file(),
+                    f"Missing deferred application entry: {app}/{launch['entry']}")
+            files = [(name, path) for name, path in tree(root) if path.is_file()]
+            rows = {name: sha256(path) for name, path in files}
+            size = sum(path.stat().st_size for _, path in files)
+        record = {
+            **launch, "archive": archive, "sha256": package["sha256"], "subdirectory": relative_target,
+            "size": size, "files": rows,
+            "version": hashlib.sha256(json.dumps(rows, ensure_ascii=False).encode("utf-8")).hexdigest(),
+        }
+        shutil.copy2(source, destination / archive)
+        (destination / f"{app}.json").write_text(json.dumps(record, ensure_ascii=False), encoding="utf-8")
 
 
 def tool(env, default):
@@ -965,6 +1014,26 @@ def apply_windows_boot_media(stage, wim):
             shutil.copyfile(safe_path(sources, f"Windows/Boot/{name}"), target)
 
 
+def check_media_shortcuts(media):
+    config = media / "OmniAIPE" / "OmniAIPE.INI"
+    if not config.is_file():
+        return
+    prefix = "%CurDrv%\\"
+    for line in config.read_text(encoding="utf-8-sig").splitlines():
+        if line.lstrip().upper().startswith("LINK "):
+            _, _, link = line.partition(",")
+            target, _, arguments = link.partition(",")
+            target = target.strip()
+            if target.casefold().startswith((prefix + "Apps\\").casefold()):
+                path = target[len(prefix):].replace("\\", "/")
+                require(safe_path(media, path).is_file(), f"Missing application shortcut target: {path}")
+                if path.casefold() == "apps/startapp.cmd":
+                    app = arguments.partition(",")[0].strip()
+                    require(re.fullmatch(r"[A-Za-z0-9]+", app)
+                            and safe_path(media, f"AppPackages/{app}.json").is_file(),
+                            f"Missing application archive for shortcut: {app}")
+
+
 def stage_media(project, lock, scopes, inputs):
     stage = safe_path(ROOT, f".work/stage/{project['version']}")
     stage.mkdir(parents=True)
@@ -995,6 +1064,7 @@ def stage_media(project, lock, scopes, inputs):
         shutil.copyfile(safe_path(inputs, uefi["source"]), target)
         check_file(target, uefi)
     apply_plan(media, scopes["media"], inputs)
+    check_media_shortcuts(media)
     ramdisks = None
     boot_path = project["wims"]["boot"]["path"]
     if boot_path != lock["wims"]["boot"]["path"]:

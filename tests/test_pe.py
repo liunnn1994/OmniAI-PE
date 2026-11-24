@@ -1,5 +1,6 @@
 import copy
 from io import BytesIO
+import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -177,6 +178,55 @@ class PathsTest(unittest.TestCase):
 
 
 class OverlayTest(unittest.TestCase):
+    def test_deferred_app_keeps_archive_and_verifies_overlay_entry(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            inputs = root / "inputs"
+            inputs.mkdir()
+            media = root / "media"
+            media.mkdir()
+            archive = inputs / "app.zip"
+            archive.write_bytes(b"locked archive")
+            extracted = root / "extracted"
+            extracted.mkdir()
+            (extracted / "app.exe").write_bytes(b"app bytes")
+            launcher = root / "Start.cmd"
+            launcher.write_bytes(b"launcher")
+            package = {"source": "app.zip", "sha256": pe.sha256(archive),
+                       "unpacked_sha256": pe.package_hash(extracted), "launch": {"entry": "Start.cmd"}}
+            plan = {"remove": [], "packages": {"Apps/Example/Portable": package},
+                    "overlay": {"Apps/Example/Start.cmd": launcher}}
+
+            def extract(exe, command, yes, output, source):
+                destination = Path(output[2:])
+                destination.mkdir()
+                (destination / "app.exe").write_bytes((extracted / "app.exe").read_bytes())
+
+            with (patch.object(pe, "tool", return_value="7z"), patch.object(pe, "run", side_effect=extract)):
+                pe.apply_plan(media, plan, inputs)
+            self.assertFalse((media / "Apps/Example/Portable").exists())
+            self.assertEqual((media / "AppPackages/Example.zip").read_bytes(), archive.read_bytes())
+            record = json.loads((media / "AppPackages/Example.json").read_text(encoding="utf-8"))
+            self.assertEqual(record["subdirectory"], "Portable")
+            self.assertEqual(record["files"], {"Portable/app.exe": pe.sha256(extracted / "app.exe"),
+                                               "Start.cmd": pe.sha256(launcher)})
+
+    def test_media_shortcut_must_point_to_a_staged_app(self):
+        with TemporaryDirectory() as temp:
+            media = Path(temp)
+            config = media / "OmniAIPE" / "OmniAIPE.INI"
+            config.parent.mkdir()
+            config.write_text(
+                "LINK %Programs%\\图形版,%CurDrv%\\Apps\\My App\\Start.cmd,,icon.ico\n",
+                encoding="utf-8-sig",
+            )
+            with self.assertRaisesRegex(ValueError, "Missing application shortcut target"):
+                pe.check_media_shortcuts(media)
+            target = media / "Apps" / "My App" / "Start.cmd"
+            target.parent.mkdir(parents=True)
+            target.touch()
+            pe.check_media_shortcuts(media)
+
     def test_boot_descriptions_update_both_stores_without_shipping_registry_logs(self):
         with TemporaryDirectory() as directory:
             media = Path(directory) / "media"
