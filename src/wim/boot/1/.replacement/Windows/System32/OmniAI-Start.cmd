@@ -1,5 +1,5 @@
 @echo off
-set "PATH=%ProgramFiles%\HPM;%ProgramFiles%\7-Zip;%ProgramFiles%\Edgeless\plugin_ept;%PATH%"
+set "PATH=%ProgramFiles%\7-Zip;%ProgramFiles%\Edgeless\plugin_ept;%ProgramFiles%\Python;%ProgramFiles%\NodeJS;%PATH%"
 set "USERPROFILE=%SystemDrive%\Users\Default"
 set "APPDATA=%USERPROFILE%\AppData\Roaming"
 set "LOCALAPPDATA=%USERPROFILE%\AppData\Local"
@@ -7,11 +7,8 @@ if not exist "%USERPROFILE%\Desktop\" md "%USERPROFILE%\Desktop"
 if not exist "%APPDATA%\Microsoft\Windows\Start Menu\Programs\" md "%APPDATA%\Microsoft\Windows\Start Menu\Programs"
 
 "%SystemRoot%\System32\Pecmd.exe" LOAD "%SystemRoot%\OmniAI-Devices.ini"
-reg query "HKLM\SYSTEM\CurrentControlSet\Control" /v SystemStartOptions | findstr /i /c:"OMNIAI_DISPLAY_1080P" >nul
-if not errorlevel 1 (
-    "%SystemRoot%\System32\Pecmd.exe" DISP W1920 H1080 B32
-    "%SystemRoot%\System32\Pecmd.exe" LOAD "%ProgramFiles%\PETools\AutoDPI.WCS"
-)
+powershell -NoProfile -ExecutionPolicy RemoteSigned -File "%SystemRoot%\System32\OmniAI-Display.ps1"
+"%SystemRoot%\System32\Pecmd.exe" LOAD "%ProgramFiles%\PETools\AutoDPI.WCS"
 "%ProgramFiles%\PETools\vtoydump.exe" -m
 for %%F in (7z.exe 7z.dll) do (
     if exist "%ProgramFiles%\7-Zip\%%F" if not exist "%SystemRoot%\System32\%%F" (
@@ -23,28 +20,14 @@ if exist "%SystemRoot%\explorer.exe" (
     start "" "%ProgramFiles%\WinXShell\WinXShell.exe" -regist -daemon
     start "" "%ProgramFiles%\PETools\ShellFix\ShellF5.exe"
     start "" "%ProgramFiles%\PETools\ShellFix\ShellR32.exe"
-    reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" /v Shell /t REG_SZ /d explorer.exe /f >nul
 )
 for %%D in (C D E F G H I J K L M N O P Q R S T U V W Y Z) do (
     if exist "%%D:\OmniAIPE\OmniAIPE.INI" "%SystemRoot%\System32\Pecmd.exe" LOAD "%%D:\OmniAIPE\OmniAIPE.INI"
 )
 "%SystemRoot%\System32\Pecmd.exe" LOAD "%ProgramFiles%\PETools.ini"
-powershell -NoProfile -Command "if (-not (Get-Process -Name explorer -ErrorAction SilentlyContinue)) { exit 1 }"
-if errorlevel 1 start "" "%ProgramFiles%\WinXShell\WinXShell.exe" -winpe
+start "" "%ProgramFiles%\WinXShell\WinXShell.exe" -winpe
 if exist "%SystemRoot%\System32\drivers\mtpHelper.sys" (
     sc.exe create mtpHelper type= kernel start= demand error= ignore binPath= "System32\Drivers\mtpHelper.sys" >"%SystemRoot%\Temp\omniai-mtp.log" 2>&1
     start "" /b cmd.exe /d /c "sc.exe start mtpHelper >>%SystemRoot%\Temp\omniai-mtp.log 2>&1"
 )
-set "hpm_log=%SystemRoot%\Temp\omniai-hpm.log"
-for %%D in (C D E F G H I J K L M N O P Q R S T U V W Y Z) do (
-    if exist "%%D:\HotProgMods\" call :load_modules default "%%D:\HotProgMods"
-    if exist "%%D:\HotPEModule\" call :load_modules default "%%D:\HotPEModule"
-    if exist "%%D:\HotProgModQ\" call :load_modules quick "%%D:\HotProgModQ"
-    if exist "%%D:\HotPEModuleQuick\" call :load_modules quick "%%D:\HotPEModuleQuick"
-)
-exit /b 0
-
-:load_modules
-"%ProgramFiles%\HPM\HPMLoadCLI.exe" %~1 "%~2" /h >>"%hpm_log%" 2>&1
-if errorlevel 1 echo HPM failed to load "%~2" >>"%hpm_log%"
 exit /b 0

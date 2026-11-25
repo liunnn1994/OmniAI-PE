@@ -42,15 +42,15 @@ mise run prepare-compat $hotpeWim $winpeWithPackages $windowsInstallWim windows-
 
 按 `.work/compat/windows-26100-new/coverage.json` 核对文件、驱动覆盖和哈希，再更新迁移清单对应的 `files` 和 `drivers`。复用原有第三方工具包和启动配置，按 README 的候选构建命令生成新版 ISO。
 
-迁移清单中的 `SOFTWARE` 文件固定为同版本微软安装映像的注册表来源，按清单合并兼容文件对应的程序集索引和 32 位应用的 SMI 设置。更新底座时，按兼容文件的版本核对这些条目。用 `SysWOW64\cmd.exe` 和原版 HPM 加载器验证 32 位程序启动及插件装配。
+迁移清单中的 `SOFTWARE` 文件固定为同版本微软安装映像的注册表来源，按清单合并兼容文件对应的程序集索引和 32 位应用的 SMI 设置。更新底座时，按兼容文件的版本核对这些条目。用 `SysWOW64\cmd.exe` 和Edgeless 加载器验证 32 位程序启动及插件装配。
 
-32 位便携工具还通过 Shell 启动子进程。装配时从同一微软注册表输入补齐 32 位 Property System、ShellItem 和 ShellItemArray 三项 COM 注册。验收时分别用 x86 和 x64 探针调用 `ShellExecuteExW`，再从原版 HPM 快捷方式实际启动便携工具。
+32 位便携工具还通过 Shell 启动子进程。装配时从同一微软注册表输入补齐 32 位 Property System、ShellItem 和 ShellItemArray 三项 COM 注册。验收时分别用 x86 和 x64 探针调用 `ShellExecuteExW`，再从迁移后的 Edgeless 快捷方式实际启动便携工具。
 
 32 位文件保存对话框使用同版本微软映像的 COM、Explorer 文件夹视图和导航注册。验收分别调用传统 `GetSaveFileNameW` 与现代 `IFileSaveDialog`，检查文件列表和目录切换，再用 AIDA64 生成报告、在保存窗口选择路径，并从关机后的测试盘读回文件。
 
 64 位文件夹选择器从同一微软注册表输入补齐 Shell Name Space ListView 的原生 COM 注册。验收检查 `SHBrowseForFolderW` 的新式目录树，并通过 Recuva 的恢复对话框选择目标卷。
 
-安装官方语言包后，构建根据 `windows_features.<索引>.locale` 配置默认界面、键盘和非 Unicode 程序的区域设置。当前槽位沿用原版的简体中文设置。启动时由 Pecmd 发起 Explorer 桌面启动。若 Explorer 进程未保持运行，则启用已随镜像装配的 WinXShell 桌面，以便访问桌面和工具入口。
+安装官方语言包后，构建根据 `windows_features.<索引>.locale` 配置默认界面、键盘和非 Unicode 程序的区域设置。当前槽位沿用原版的简体中文设置。启动脚本在加载工具快捷方式配置后启动 WinXShell 桌面。开始面板按用户和公共的「开始菜单 → 程序」目录读取快捷方式，继续支持 Edgeless 加载器动态添加的工具。任务栏文件管理器和 `Win+E` 通过 WinXShell 打开 Explorer++。
 
 兼容文件层保留 WinPE 原有的桌面初始化机制。对照测试确认，单独加入完整 Windows 的 `System32/dwminit.dll` 就会在进入启动脚本前出现黑屏。文件筛选和装配校验都排除该文件。
 
@@ -80,7 +80,7 @@ GitHub Actions 的手动触发和启用后的 push 构建使用 `project.json`�
 | --- | --- |
 | BIOS、UEFI、内核、默认外观 | 两种固件下实测启动、来宾版本、桌面和菜单截图 |
 | 桌面与工具入口 | 对照原版核对保留的快捷方式和热键，以及移除的美化配置 |
-| HPM 与 Edgeless | 核对原有九个 HPM 的哈希、Edgeless 加载器和配置的迁移情况 |
+| Edgeless | 核对已有外置应用和上游模块转换后的包内容、初始化脚本和快捷方式 |
 | 驱动与系统依赖 | 从交付镜像核对驱动家族、外置驱动包和非标准 WinPE 依赖 |
 
 默认 VirtualBox 测试机断网且无硬盘。优先复用专用测试机和现有测试盘，按用例换挂载。涉及磁盘写入的验证使用独立的测试盘。需要特定物理硬件的用例保留实际设备验证项。每轮清单、版本、结果与截图保存在该版本的 `dist/` 目录。

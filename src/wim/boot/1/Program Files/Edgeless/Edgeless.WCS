@@ -1,0 +1,4 @@
+﻿EXEC !REG IMPORT "%ProgramFiles%\Edgeless\LoadAsPlugin.reg"
+LINK %Programs%\Edgeless插件\选择插件加载,%ProgramFiles%\Edgeless\plugin_loader\load.cmd,,%ProgramFiles%\icons\el_plugin.ico
+LINK %Programs%\Edgeless插件\插件管理命令行,cmd.exe,/k ept help
+EXEC !"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File "%ProgramFiles%\Edgeless\plugin_loader\Scan-Plugins.ps1"

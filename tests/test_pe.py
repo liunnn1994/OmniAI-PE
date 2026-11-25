@@ -178,7 +178,7 @@ class PathsTest(unittest.TestCase):
 
 
 class OverlayTest(unittest.TestCase):
-    def test_deferred_app_keeps_archive_and_verifies_overlay_entry(self):
+    def test_deferred_app_packs_edgeless_plugin_and_verifies_overlay_entry(self):
         with TemporaryDirectory() as directory:
             root = Path(directory)
             inputs = root / "inputs"
@@ -196,20 +196,30 @@ class OverlayTest(unittest.TestCase):
                        "unpacked_sha256": pe.package_hash(extracted), "launch": {"entry": "Start.cmd"}}
             plan = {"remove": [], "packages": {"Apps/Example/Portable": package},
                     "overlay": {"Apps/Example/Start.cmd": launcher}}
+            config = media / "OmniAIPE/OmniAIPE.INI"
+            config.parent.mkdir()
+            config.write_text("LINK %Programs%\\Example,@Edgeless:Example@\n", encoding="utf-8")
 
             def extract(exe, command, yes, output, source):
                 destination = Path(output[2:])
                 destination.mkdir()
                 (destination / "app.exe").write_bytes((extracted / "app.exe").read_bytes())
 
-            with (patch.object(pe, "tool", return_value="7z"), patch.object(pe, "run", side_effect=extract)):
+            def pack(plugin, destination):
+                self.assertEqual(destination.name, "Example_1.0_OmniAI.7zf")
+                self.assertIn("Edgeless-Launch.ps1", (plugin / "Install-Example.cmd").read_text())
+                self.assertIn("Start.cmd", (plugin / "Example/Edgeless-Launch.ps1").read_text(encoding="utf-8-sig"))
+                record = json.loads((plugin / "Example/Edgeless-Integrity.json").read_text(encoding="ascii"))
+                self.assertEqual(record["files"]["Example/Portable/app.exe"], pe.sha256(extracted / "app.exe"))
+                self.assertEqual(record["files"]["Example/Start.cmd"], pe.sha256(launcher))
+                destination.touch()
+
+            with (patch.object(pe, "tool", return_value="7z"), patch.object(pe, "run", side_effect=extract),
+                  patch.object(pe, "pack_edgeless", side_effect=pack)):
                 pe.apply_plan(media, plan, inputs)
-            self.assertFalse((media / "Apps/Example/Portable").exists())
-            self.assertEqual((media / "AppPackages/Example.zip").read_bytes(), archive.read_bytes())
-            record = json.loads((media / "AppPackages/Example.json").read_text(encoding="utf-8"))
-            self.assertEqual(record["subdirectory"], "Portable")
-            self.assertEqual(record["files"], {"Portable/app.exe": pe.sha256(extracted / "app.exe"),
-                                               "Start.cmd": pe.sha256(launcher)})
+            self.assertFalse((media / "Apps/Example").exists())
+            self.assertIn("Example_1.0_OmniAI.7zf", config.read_text(encoding="utf-8-sig"))
+            pe.check_media_shortcuts(media)
 
     def test_media_shortcut_must_point_to_a_staged_app(self):
         with TemporaryDirectory() as temp:
@@ -242,7 +252,7 @@ class OverlayTest(unittest.TestCase):
                         for entry, name in entries.items()]
             applied = []
             defaults_applied = []
-            display_applied = []
+            display_menus = []
             devices_applied = []
             osdevices_applied = []
             ramdisks = {kind: rf"ramdisk=[boot]\OmniAIPE\Boot.wim,{options}"
@@ -253,11 +263,6 @@ class OverlayTest(unittest.TestCase):
                     self.assertEqual(path.name, stores["uefi"].name)
                     self.assertEqual(applied, expected)
                     defaults_applied.append(entry)
-                    return
-                if element in {"highestmode", "loadoptions"}:
-                    self.assertEqual(path.name, stores["uefi"].name)
-                    self.assertEqual(entry, default)
-                    display_applied.append((element, name))
                     return
                 kind = next(kind for kind, store in stores.items() if store.name == path.name)
                 if element == "device":
@@ -275,15 +280,21 @@ class OverlayTest(unittest.TestCase):
                 kind = next(kind for kind, store in stores.items() if store.name == path.name)
                 osdevices_applied.append((kind, list(entries)))
 
+            def configure(path, kind, entries, selected_default):
+                self.assertEqual(path.name, stores[kind].name)
+                self.assertEqual(selected_default, default)
+                display_menus.append((kind, list(entries)))
+
             with (patch.object(pe, "run", side_effect=edit),
-                  patch.object(pe, "sync_bcd_osdevices", side_effect=sync)):
+                  patch.object(pe, "sync_bcd_osdevices", side_effect=sync),
+                  patch.object(pe, "configure_display_menu", side_effect=configure)):
                 pe.apply_boot_descriptions(media, descriptions, default,
-                                           prefer_1080p=project["uefi_prefer_1080p"], ramdisks=ramdisks)
+                                           display_menu=project["boot_display_menu"], ramdisks=ramdisks)
             self.assertEqual(applied, expected)
             self.assertEqual(devices_applied, [(kind, entry, "device", ramdisks[kind])
                                                for kind, entry, _ in expected])
             self.assertEqual(osdevices_applied, [(kind, list(entries)) for kind, entries in descriptions.items()])
-            self.assertEqual(display_applied, [("highestmode", "off"), ("loadoptions", "OMNIAI_DISPLAY_1080P")])
+            self.assertEqual(display_menus, [(kind, list(entries)) for kind, entries in descriptions.items()])
             self.assertEqual(defaults_applied, [default])
             self.assertEqual({path for path in media.rglob("*") if path.is_file()}, set(stores.values()))
             for kind, store in stores.items():

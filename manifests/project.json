@@ -1,5 +1,5 @@
 {
-  "version": "0.3.37",
+  "version": "0.3.59",
   "volume_label": "OMNIAI_PE",
   "media_source": "media",
   "media_renames": {
@@ -21,15 +21,15 @@
   },
   "boot_descriptions": {
     "bios": {
-      "{default}": "OmniAI PE (Legacy BIOS)"
+      "{default}": "OmniAI PE (BIOS, Recommended resolution)"
     },
     "uefi": {
-      "{2b27e930-f7ab-11df-aeb8-c641fe7f0057}": "OmniAI PE (UEFI, 1920x1080 preferred)",
+      "{2b27e930-f7ab-11df-aeb8-c641fe7f0057}": "OmniAI PE (UEFI, Recommended resolution)",
       "{3c19f227-82e7-4331-a7f1-fee53a899d60}": "OmniAI PE (UEFI, 1024x768)"
     }
   },
   "uefi_default_entry": "{2b27e930-f7ab-11df-aeb8-c641fe7f0057}",
-  "uefi_prefer_1080p": true,
+  "boot_display_menu": true,
   "wims": {
     "boot": {
       "path": "OmniAIPE/Boot.wim",
@@ -42,12 +42,12 @@
         "kernel_version": "10.0.26100.9974",
         "configs": {
           "1": [
-            "Program Files/HPM/HPM.WCS",
             "Program Files/Drives/Network.WCS",
             "Program Files/PETools.ini",
             "Windows/System32/OmniAI-Devices.ps1",
             "Windows/System32/OmniAI-HideStartup.ps1",
             "Windows/System32/OmniAI-Start.cmd",
+            "Windows/System32/OmniAI-StartPanel.ps1",
             "Windows/System32/startnet.cmd",
             "Windows/OmniAI-Devices.ini",
             "Program Files/PETools/PlainAppearance.reg",
@@ -376,21 +376,15 @@
     },
     {
       "scope": "boot/1",
-      "source": "packages/OmniAIPE-2.8-no-theme/Program Files/Edgeless",
+      "source": "packages/Edgeless-plugin-runtime",
       "target": "Program Files/Edgeless",
-      "sha256": "2c7febc9800a46016eeff796c162bcf6b5f4896501ea4409c150f7addb251bc1"
+      "sha256": "56368889eb2db30a787b134b50dd631555073ff315957481f32bc2d78ca793a9"
     },
     {
       "scope": "boot/1",
       "source": "packages/OmniAIPE-2.8-no-theme/Program Files/HotSysSetup",
       "target": "Program Files/HotSysSetup",
       "sha256": "0d5d36085b68e0c0b67836c7b3a6c2110e83f69f9f887b44bf78f713bb0189c7"
-    },
-    {
-      "scope": "boot/1",
-      "source": "packages/OmniAIPE-2.8-no-theme/Program Files/HPM",
-      "target": "Program Files/HPM",
-      "sha256": "504c18023244390027218eb26a5143e2c2e0465c6c65b901f37790b11f38a425"
     },
     {
       "scope": "boot/1",
@@ -418,9 +412,15 @@
     },
     {
       "scope": "boot/1",
-      "source": "packages/OmniAIPE-2.8-no-theme/Program Files/WinXShell",
+      "source": "packages/winxshell-5.1.6-x64",
       "target": "Program Files/WinXShell",
-      "sha256": "b937d4a0810ad0640133e391e76f5d63a5368cca0495a8f4f1e2416f22b23aa6"
+      "sha256": "df90f7f4a37d2ac5451d0e1c175d81238fb0f3a9a4a5c0fdfca7ef9eaddb524c"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/explorerpp-1.4.0-x64",
+      "target": "Program Files/Explorer++",
+      "sha256": "efab72ed90e763556b7b6b38b656b68f399a540b56491b4a827788d1b182f9ff"
     },
     {
       "scope": "boot/1",
@@ -433,12 +433,6 @@
       "source": "packages/OmniAIPE-2.8-no-theme/Windows/System32/Pecmd.exe",
       "target": "Windows/System32/Pecmd.exe",
       "sha256": "d818dfe1adb10cf04439fcf59d3faac4f11461042e327efe418036749fb332ab"
-    },
-    {
-      "scope": "boot/1",
-      "source": "packages/startallback-3.9.28-x64",
-      "target": "Program Files/StartAllBack",
-      "sha256": "5907ebf2390b61df4acc8666ca47160ddc13d2c4eac7ec9bbc7f8cdbc8e52c0f"
     },
     {
       "scope": "boot/1",
@@ -496,9 +490,9 @@
     },
     {
       "scope": "media",
-      "source": "packages/chrome-158.0.8127.37",
+      "source": "packages/chrome-158.0.8127.89",
       "target": "Apps/Chrome",
-      "sha256": "5d6afdf7ec8d6504e2010e12c302f26c322400a0337eac81d6bc02254f02840a"
+      "sha256": "4e7515e51749a8908726fad491704fa659d8ff88d20bcab070d008a14878d275"
     },
     {
       "scope": "media",
@@ -542,9 +536,87 @@
     },
     {
       "scope": "media",
-      "source": "packages/opencode-1.19.6-baseline",
+      "source": "packages/opencode-desktop-2.4.1-x64.7z",
       "target": "Apps/OpenCode",
-      "sha256": "9520aeb6db4a1dc6f0d334492c3261799f08615d390b4de17a1827e73e479e9a"
+      "sha256": "fe8b60194cebe767886a2ec6fe95c6c55dd5b5dc8a06f121c64a47599ea5ec25",
+      "unpacked_sha256": "983ee6aa6b3f69bedc85ca08df71408916cec7827c907fd65331ee2ee07848df",
+      "launch": {"entry": "OpenCode.exe", "arguments": "--disable-direct-composition"}
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/fdm-6.36.0.7128-x64-portable",
+      "target": "Program Files/Free Download Manager",
+      "sha256": "4825b5eb52dcb36545b024a3ccdf14b1eef1c661e6a6bffafb7da4fa6011db06"
+    },
+    {
+      "scope": "media",
+      "source": "packages/CC-Switch-v4.0.40-Windows-Portable.zip",
+      "target": "Apps/CCSwitch",
+      "sha256": "de840f2fe8460aa53c22cd4a7d9361629481b41b37b75742041c15636eb1cdf7",
+      "unpacked_sha256": "8342483479cff6acd75c7b14855a222da1cb3406c8c47ba77dc88b9e092d7407",
+      "launch": {"entry": "cc-switch.exe"}
+    },
+    {
+      "scope": "media",
+      "source": "packages/magpie-0.1.4778-x64.7z",
+      "target": "Apps/Magpie",
+      "sha256": "5b6a140316532f6e8d2405b02ca52e9548102f4cee010dfb745205912d8ad87f",
+      "unpacked_sha256": "aab922c16a41b97a877d1c7ea296817c3da5d47a922d1ebf7159af3599200b45",
+      "launch": {"entry": "magpie-windows-amd64.exe"}
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/webview2-fixed-158.0.4370.33-x64",
+      "target": "Program Files/WebView2/158.0.4370.33",
+      "sha256": "042d2a600b098d930c386d6eabad586b7aad17849821863e5d8f213dec42def3"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/python-3.15.2-x64",
+      "target": "Program Files/Python",
+      "sha256": "de46eced05307b4def734e528753b0764cdb4ef1645900f7ae96e640de2449c6"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/nodejs-26.13.1-x64",
+      "target": "Program Files/NodeJS",
+      "sha256": "0c1590fb02d3958005eabed53913e420da63ce04e77f5df0fe104ec349c98549"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/OmniAI-PE-wallpaper.jpg",
+      "target": "Windows/Web/Wallpaper/Windows/img0.jpg",
+      "sha256": "37879634ef62f4a460da4983cb6df6b21d49a13ce26d0388c05800628516db1c"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/winui3-pe-compat/msvcp140.dll",
+      "target": "Windows/System32/msvcp140.dll",
+      "sha256": "7c26614e1d733892c2deac7e245ce115504b1d80592dd0a01b08e3e5a55f89ca"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/winui3-pe-compat/rometadata.dll",
+      "target": "Windows/System32/rometadata.dll",
+      "sha256": "47a51a488149bd7aebfdab0b4bdcd19b758cc78f87ca606ca3c23ddb3046c0d4"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/winui3-pe-compat/threadpoolwinrt.dll",
+      "target": "Windows/System32/threadpoolwinrt.dll",
+      "sha256": "556d65bc0e5fd7dff550f37e9a8b1b7bd45c7359b8059fd3b4905e748aed230f"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/winui3-pe-compat/vcruntime140.dll",
+      "target": "Windows/System32/vcruntime140.dll",
+      "sha256": "d1f4225df2cd877dbf130d5668a021dce3f94118455ff5ec952061c30afc9ce7"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/winui3-pe-compat/vcruntime140_1.dll",
+      "target": "Windows/System32/vcruntime140_1.dll",
+      "sha256": "a7146c08f89fe5b04541ab507cdb59ff7b44534d4ba3c668a426c6450a03434e"
     },
     {
       "scope": "media",
@@ -618,9 +690,27 @@
     },
     {
       "scope": "boot/1",
-      "source": "packages/pixpin-winpe/MFReadWrite.dll",
-      "target": "Windows/System32/MFReadWrite.dll",
-      "sha256": "b8295795734e17552fe0b9383426ed2543227d5155a2e8f3ff621a544e3cba4d"
+      "source": "packages/winpe-pixpin-mf-26100.10068/mf.dll",
+      "target": "Windows/System32/mf.dll",
+      "sha256": "2b7a0bba3da329ba1e57a5a91c646da968bc4220c05e010d8f17e4fdd780f68b"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/winpe-pixpin-mf-26100.10068/mfcore.dll",
+      "target": "Windows/System32/mfcore.dll",
+      "sha256": "bb33adfc82b547a5ca1f8d4f5f41580d6700e46cd9af9d8bdd8842e7e993fbc7"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/winpe-pixpin-mf-26100.10068/mfplat.dll",
+      "target": "Windows/System32/mfplat.dll",
+      "sha256": "32ab72ffc3461256c1eb1311ae825bb66a8bccedec9a9e7791bc31710ab204a1"
+    },
+    {
+      "scope": "boot/1",
+      "source": "packages/winpe-pixpin-mf-26100.10068/mfreadwrite.dll",
+      "target": "Windows/System32/mfreadwrite.dll",
+      "sha256": "7d39bf78d5599de07597b37dc61543c95b0a69110e864e6cbe419a2828a8fc92"
     },
     {
       "scope": "boot/1",
@@ -641,16 +731,46 @@
       "sha256": "79ae198a14ad3270c244e30a5b8242d81dc5f0dba2f8efd861658fb9422910ed"
     },
     {
-      "scope": "media",
-      "source": "packages/MoreTools-0.3.35.HPM",
-      "target": "HotProgMods/MoreTools_VirtualHotBar_2.8_[PreInstall].HPM",
-      "sha256": "72db27106c4a9e6f5b0e652488c381a70633a71c451d612c274a59c22de420f8"
+      "scope": "boot/1",
+      "source": "packages/DiskGenius-6.2.0.1829-x64",
+      "target": "Program Files/DiskGenius",
+      "sha256": "ac0763312d86cd8c9241471bf9dbfe984e6bd29bbe0e1f6621d1ea80153c4221"
     },
     {
       "scope": "media",
-      "source": "packages/WIT-25H2-0.3.34.HPM",
-      "target": "HotProgMods/WIT_VirtualHotBar_25H2_[PreInstall].HPM",
-      "sha256": "c834b108b1194b0cd884736246c29964e0d9c46c21f52ed228f65ef95a73c184"
+      "source": "packages/Edgeless-offline-tools/Dism++_10.1.1002.1_VirtualHotBar.7z",
+      "target": "Edgeless/Resource/Dism++_10.1.1002.1_VirtualHotBar.7z",
+      "sha256": "1b9ceaeae27e1c3a70cd04a49bd2fc4a9292562e2a5528382bfed2102d434dd2"
+    },
+    {
+      "scope": "media",
+      "source": "packages/Edgeless-offline-tools/MoreTools_2.8_VirtualHotBar.7z",
+      "target": "Edgeless/Resource/MoreTools_2.8_VirtualHotBar.7z",
+      "sha256": "ef0a13c40f76415d0cd3881ca69abfcef1c94b17c23d68e1c4c865b5edf8075c"
+    },
+    {
+      "scope": "media",
+      "source": "packages/Edgeless-offline-tools/NT6Bootfix_1.0.2.3_VirtualHotBar.7z",
+      "target": "Edgeless/Resource/NT6Bootfix_1.0.2.3_VirtualHotBar.7z",
+      "sha256": "6279f77628bac12005e6253c31df0d38909903e1dedaab6b713e308e63c46453"
+    },
+    {
+      "scope": "media",
+      "source": "packages/Edgeless-offline-tools/NTPWEDIT_2.1.0.6357_VirtualHotBar.7z",
+      "target": "Edgeless/Resource/NTPWEDIT_2.1.0.6357_VirtualHotBar.7z",
+      "sha256": "3678ed09bdc271cf355e2181776b0435bb774e81bbfa4bd0b0ce75fccdf3ac53"
+    },
+    {
+      "scope": "media",
+      "source": "packages/Edgeless-offline-tools/WinNTSetup_5.4.1.0_VirtualHotBar.7z",
+      "target": "Edgeless/Resource/WinNTSetup_5.4.1.0_VirtualHotBar.7z",
+      "sha256": "e069aba0c1a12f4238c1a5afa67f472251cda2781073362415fa42965b2526ca"
+    },
+    {
+      "scope": "media",
+      "source": "packages/Edgeless-offline-tools/WIT_25.2_VirtualHotBar.7z",
+      "target": "Edgeless/Resource/WIT_25.2_VirtualHotBar.7z",
+      "sha256": "4a7285c228ee6a11250b1dca1c0227f4aad37b6529b93aca669fc43007a06a1c"
     },
     {
       "scope": "media",
@@ -666,11 +786,11 @@
     },
     {
       "scope": "media",
+      "source": "packages/TubaWinUi3-1.9.1-x64.7z",
       "target": "Apps/TubaTools",
-      "source": "packages/tbtool-2026.08-desktop.7z",
-      "sha256": "266a5af392a4a66b6a6de5cccfa1794e22dba305276b30a694480c53cba03b79",
-      "unpacked_sha256": "82a403cf37978cc01e6514282088d682e36830c99a0531dd58f2650cf09ad731",
-      "launch": { "entry": "TubaTools.exe" }
+      "sha256": "0884e66eb6cf5e252d19634c60f005301fd374cc4d825bc8dd964b17fc6fb57c",
+      "unpacked_sha256": "271e9c38d26ca88369212c0b96ce17b8b1b55f2c50d3cdee78757ae3df5f0a7b",
+      "launch": {"entry": "图吧工具箱WinUI3.exe"}
     },
     {
       "scope": "media",
@@ -688,8 +808,7 @@
   "media_remove": [
     "AUTORUN.INF",
     "OmniAIPE.ico",
-    "HotProgMods/Browser_VirtualHotBar_C86_[PreInstall].HPM",
-    "HotProgMods/DiskGenius_VirtualHotBar_6.0.1.1645_[PreInstall].HPM"
+    "HotProgMods"
   ],
   "wim_remove": {}
 }

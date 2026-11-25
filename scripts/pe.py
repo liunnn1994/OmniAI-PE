@@ -268,10 +268,10 @@ def load_plan(inputs, with_inputs, manifest="project.json", *, with_kernel=True)
         require(isinstance(entry, str) and entry != "{default}"
                 and entry in project.get("boot_descriptions", {}).get("uefi", {}),
                 "UEFI 默认启动项必须引用 boot_descriptions 中的启动项 GUID")
-    if "uefi_prefer_1080p" in project:
-        require(isinstance(project["uefi_prefer_1080p"], bool)
-                and (not project["uefi_prefer_1080p"] or "uefi_default_entry" in project),
-                "UEFI 1080p 首选项需要指定默认启动项")
+    if project.get("boot_display_menu"):
+        descriptions = project.get("boot_descriptions", {})
+        require("{default}" in descriptions.get("bios", {}) and len(descriptions.get("uefi", {})) == 2
+                and "uefi_default_entry" in project, "显示模式菜单需要 BIOS 默认项和两个 UEFI 启动项")
     renames = project.get("media_renames", {})
     require(isinstance(renames, dict), "Expected media renames by path component")
     for old, new in renames.items():
@@ -359,6 +359,14 @@ def load_plan(inputs, with_inputs, manifest="project.json", *, with_kernel=True)
                 require(path.is_file(), f"Missing replacement config: {path}")
                 entries[name.casefold()] = (name, path)
             plan["overlay"] = dict(entries.values())
+            if any(package["scope"] == scope and package["target"] == "Program Files/Edgeless"
+                   for package in project["packages"]):
+                overlay_root = source.parent
+                plan["overlay"].update(
+                    (f"Program Files/Edgeless/{name}", path)
+                    for name, path in tree(overlay_root / "Program Files/Edgeless") if path.is_file()
+                )
+                plan["overlay"]["Windows/System32/ept.cmd"] = overlay_root / "Windows/System32/ept.cmd"
         for index, packages in replacement.get("windows_packages", {}).items():
             scope = f"{slot}/{index}"
             require(scope in scopes, f"Unknown servicing WIM index: {scope}")
@@ -517,13 +525,18 @@ def apply_plan(root, plan, inputs):
 
 
 def prepare_app_archives(media, apps):
-    destination = safe_path(media, "AppPackages")
-    destination.mkdir()
+    destination = safe_path(media, "Edgeless/OnDemand")
+    destination.mkdir(parents=True)
+    archives = {}
     for app, target, package, source in apps:
         app_root = safe_path(media, f"Apps/{app}")
-        archive = f"{app}{source.suffix.lower()}"
+        number = re.search(r"\d+(?:\.\d+)+", source.stem)
+        version = number[0] if number else "1.0"
+        archive = f"{app}_{version}_OmniAI.7zf"
         with tempfile.TemporaryDirectory(prefix="omniai-app-") as directory:
-            root = Path(directory)
+            plugin = Path(directory)
+            root = plugin / app
+            root.mkdir()
             relative_target = "/".join(target.split("/")[2:])
             unpacked = safe_path(root, relative_target) if relative_target else root
             run(tool("SEVENZIP", "7z.exe"), "x", "-y", f"-o{unpacked}", source)
@@ -534,16 +547,55 @@ def prepare_app_archives(media, apps):
             launch = package["launch"]
             require(safe_path(root, launch["entry"]).is_file(),
                     f"Missing deferred application entry: {app}/{launch['entry']}")
-            files = [(name, path) for name, path in tree(root) if path.is_file()]
+            (root / "Edgeless-Launch.ps1").write_text(
+                app_launch_script(app, launch), encoding="utf-8-sig")
+            (plugin / f"Install-{app}.cmd").write_text(
+                '@echo off\n'
+                'setlocal\n'
+                '"%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" '
+                f'-NoProfile -ExecutionPolicy Bypass -File "%~dp0{app}\\Edgeless-Launch.ps1"\n'
+                'exit /b %errorlevel%\n', encoding="ascii", newline="\r\n")
+            files = [(name, path) for name, path in tree(plugin) if path.is_file()]
             rows = {name: sha256(path) for name, path in files}
             size = sum(path.stat().st_size for _, path in files)
-        record = {
-            **launch, "archive": archive, "sha256": package["sha256"], "subdirectory": relative_target,
-            "size": size, "files": rows,
-            "version": hashlib.sha256(json.dumps(rows, ensure_ascii=False).encode("utf-8")).hexdigest(),
-        }
-        shutil.copy2(source, destination / archive)
-        (destination / f"{app}.json").write_text(json.dumps(record, ensure_ascii=False), encoding="utf-8")
+            (plugin / f"{app}/Edgeless-Integrity.json").write_text(
+                json.dumps({"size": size, "files": rows}, ensure_ascii=True), encoding="ascii")
+            pack_edgeless(plugin, destination / archive)
+        archives[app] = archive
+        if app_root.is_dir():
+            tree(app_root)
+            shutil.rmtree(app_root)
+    config = media / "OmniAIPE/OmniAIPE.INI"
+    if config.is_file():
+        content = config.read_text(encoding="utf-8-sig")
+        content = re.sub(r"@Edgeless:([A-Za-z0-9]+)@",
+                         lambda match: '%ProgramFiles%\\Edgeless\\plugin_loader\\load-local.cmd,'
+                         f'"%CurDrv%\\Edgeless\\OnDemand\\{archives[match[1]]}"', content)
+        config.write_text(content, encoding="utf-8-sig", newline="\r\n")
+
+
+def pack_edgeless(root, destination):
+    subprocess.run([tool("SEVENZIP", "7z.exe"), "a", "-t7z", "-mx=1", "-mmt=4", "-ms=off",
+                    "-bso0", "-bsp0", str(destination.resolve()), "*"],
+                   cwd=root, check=True)
+
+
+def app_launch_script(app, launch):
+    entry = launch["entry"].replace("/", "\\").replace("'", "''")
+    arguments = launch.get("arguments", "").replace("'", "''")
+    script = (
+        "$ErrorActionPreference = 'Stop'\n"
+        f"$entry = Join-Path $PSScriptRoot '{entry}'\n"
+        "$launch = @{ FilePath = $entry; WorkingDirectory = (Split-Path $entry) }\n"
+    )
+    if arguments:
+        script += f"$launch.ArgumentList = '{arguments}'\n"
+    if app in {"CCSwitch", "Magpie"}:
+        script += (ROOT / "src/wim/boot/1/Program Files/Edgeless/plugin_loader/WebView2.ps1").read_text(
+            encoding="utf-8-sig")
+        if app == "Magpie":
+            script += "$env:MAGPIE_NO_INSTALL = '1'\n"
+    return script + "Start-Process @launch\n"
 
 
 def tool(env, default):
@@ -968,7 +1020,28 @@ def sync_bcd_osdevices(store, entries):
                 write(osdevice, "Element", kind, value)
 
 
-def apply_boot_descriptions(media, descriptions, uefi_default=None, *, prefer_1080p=False, ramdisks=None):
+def configure_display_menu(store, kind, entries, uefi_default):
+    editor = ("bcdedit.exe", "/store", str(store))
+    if kind == "bios":
+        default = "{default}"
+        result = subprocess.check_output([*editor, "/copy", default, "/d", "OmniAI PE (BIOS, 1024x768)"])
+        match = re.search(rb"\{[0-9a-fA-F-]{36}\}", result)
+        require(match, "BCDEdit 未返回 BIOS 1024x768 启动项 GUID")
+        safe = match[0].decode("ascii")
+    else:
+        default = uefi_default
+        safe, = (entry for entry in entries if entry != default)
+        run(*editor, "/set", default, "highestmode", "off")
+        run(*editor, "/set", safe, "highestmode", "off")
+        run(*editor, "/set", safe, "graphicsresolution", "1024x768")
+    run(*editor, "/set", default, "loadoptions", "OMNIAI_DISPLAY_AUTO")
+    run(*editor, "/set", safe, "loadoptions", "OMNIAI_DISPLAY_1024")
+    run(*editor, "/displayorder", default, safe)
+    run(*editor, "/set", "{bootmgr}", "displaybootmenu", "yes")
+    run(*editor, "/timeout", "8")
+
+
+def apply_boot_descriptions(media, descriptions, uefi_default=None, *, display_menu=False, ramdisks=None):
     for kind, entries in descriptions.items():
         store = safe_path(media, BCD_STORES[kind])
         # BCDEdit 会产生注册表日志，只将修改后的 BCD 放回媒体目录。
@@ -982,11 +1055,9 @@ def apply_boot_descriptions(media, descriptions, uefi_default=None, *, prefer_10
             if ramdisks:
                 # 复用 BCDEdit 写入的 ramdisk 数据，避免部分宿主机的 osdevice 命令失败。
                 sync_bcd_osdevices(editable, entries)
+            if display_menu:
+                configure_display_menu(editable, kind, entries, uefi_default)
             if kind == "uefi" and uefi_default is not None:
-                if prefer_1080p:
-                    # BCDEdit 的 graphicsresolution 不接受 1080p。保留固件模式并在 PE 内请求 1080p。
-                    run("bcdedit.exe", "/store", editable, "/set", uefi_default, "highestmode", "off")
-                    run("bcdedit.exe", "/store", editable, "/set", uefi_default, "loadoptions", "OMNIAI_DISPLAY_1080P")
                 run("bcdedit.exe", "/store", editable, "/default", uefi_default)
             shutil.copyfile(editable, store)
 
@@ -1020,6 +1091,7 @@ def check_media_shortcuts(media):
         return
     prefix = "%CurDrv%\\"
     for line in config.read_text(encoding="utf-8-sig").splitlines():
+        require("@Edgeless:" not in line, f"Unresolved Edgeless application shortcut: {line}")
         if line.lstrip().upper().startswith("LINK "):
             _, _, link = line.partition(",")
             target, _, arguments = link.partition(",")
@@ -1027,11 +1099,11 @@ def check_media_shortcuts(media):
             if target.casefold().startswith((prefix + "Apps\\").casefold()):
                 path = target[len(prefix):].replace("\\", "/")
                 require(safe_path(media, path).is_file(), f"Missing application shortcut target: {path}")
-                if path.casefold() == "apps/startapp.cmd":
-                    app = arguments.partition(",")[0].strip()
-                    require(re.fullmatch(r"[A-Za-z0-9]+", app)
-                            and safe_path(media, f"AppPackages/{app}.json").is_file(),
-                            f"Missing application archive for shortcut: {app}")
+            elif target.casefold() == r"%programfiles%\edgeless\plugin_loader\load-local.cmd":
+                archive = arguments.partition(",")[0].strip().strip('"')
+                require(archive.startswith(prefix + "Edgeless\\OnDemand\\")
+                        and safe_path(media, archive[len(prefix):].replace("\\", "/")).is_file(),
+                        f"Missing Edgeless package for shortcut: {archive}")
 
 
 def stage_media(project, lock, scopes, inputs):
@@ -1072,7 +1144,7 @@ def stage_media(project, lock, scopes, inputs):
         ramdisks = {kind: f"ramdisk=[boot]{windows_path},{options}"
                     for kind, options in lock["bcd_ramdisk_options"].items()}
     apply_boot_descriptions(media, project.get("boot_descriptions", {}), project.get("uefi_default_entry"),
-                            prefer_1080p=project.get("uefi_prefer_1080p", False), ramdisks=ramdisks)
+                            display_menu=project.get("boot_display_menu", False), ramdisks=ramdisks)
     for slug, slot in project["wims"].items():
         wim = safe_path(media, slot["path"])
         if "replacement" in slot:
